@@ -2,9 +2,15 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, MapPin, Calendar, Wallet } from "lucide-react";
 import { auth } from "@/lib/auth/session";
-import { getRequestWithOffers } from "@/lib/services/serviceRequests";
+import {
+  getRequestWithOffers,
+  getRequestWorkflow,
+} from "@/lib/services/serviceRequests";
+import { getOrCreateConversationForRequest } from "@/lib/services/messaging";
 import { formatTRY } from "@/lib/utils";
 import { OfferComparison } from "@/components/service/OfferComparison";
+import { EscrowWorkflow } from "@/components/service/EscrowWorkflow";
+import { ChatBox } from "@/components/messaging/ChatBox";
 
 export const metadata = { title: "Talep Detayı" };
 
@@ -16,7 +22,21 @@ export default async function Page({ params }: { params: { id: string } }) {
   if (!request) notFound();
   if (request.customer.id !== session.user.id) redirect("/panel/hizmet-al");
 
-  const selectable = request.status === "OPEN";
+  const isOpen = request.status === "OPEN";
+  const selectable = isOpen;
+
+  // Teklif seçildikten sonra: iş akışı + konuşma
+  const workflow = isOpen ? null : await getRequestWorkflow(params.id);
+  const winner = workflow?.offers[0] ?? null;
+
+  let conversationId: string | null = null;
+  if (workflow && winner) {
+    const convo = await getOrCreateConversationForRequest(
+      params.id,
+      session.user.id,
+    ).catch(() => null);
+    conversationId = convo?.id ?? null;
+  }
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -69,9 +89,64 @@ export default async function Page({ params }: { params: { id: string } }) {
         )}
       </div>
 
+      {/* Emanet / iş akışı (teklif seçildikten sonra) */}
+      {workflow && workflow.payment && (
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <EscrowWorkflow
+            requestId={request.id}
+            status={workflow.status}
+            amount={workflow.payment.amount}
+            platformFee={workflow.payment.platformFee}
+            approvalDeadline={
+              workflow.payment.approvalDeadline
+                ? workflow.payment.approvalDeadline.toISOString()
+                : null
+            }
+            delivery={
+              workflow.payment.delivery
+                ? {
+                    note: workflow.payment.delivery.note,
+                    files: workflow.payment.delivery.files,
+                    deliveredAt: workflow.payment.delivery.deliveredAt
+                      ? workflow.payment.delivery.deliveredAt.toISOString()
+                      : null,
+                    approvedAt: workflow.payment.delivery.approvedAt
+                      ? workflow.payment.delivery.approvedAt.toISOString()
+                      : null,
+                  }
+                : null
+            }
+            provider={
+              winner
+                ? {
+                    fullName: winner.provider.fullName,
+                    phone: winner.provider.phone,
+                    email: winner.provider.email,
+                    headline: winner.provider.providerProfile?.headline ?? null,
+                  }
+                : null
+            }
+            contactUnlocked={workflow.conversation?.contactUnlocked ?? false}
+            disputeReason={workflow.dispute?.reason ?? null}
+          />
+
+          {conversationId ? (
+            <ChatBox
+              conversationId={conversationId}
+              currentUserId={session.user.id}
+              otherName={winner?.provider.fullName ?? "Hizmet veren"}
+            />
+          ) : (
+            <div className="card grid place-items-center p-6 text-center text-sm text-navy-400">
+              Mesajlaşma teklif seçildikten sonra açılır.
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-8">
         <h2 className="mb-4 font-display text-xl font-bold text-navy-900">
-          Gelen teklifler ({request.offers.length})
+          {isOpen ? `Gelen teklifler (${request.offers.length})` : "Teklifler"}
         </h2>
         <OfferComparison
           requestId={request.id}

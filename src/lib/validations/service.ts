@@ -35,3 +35,34 @@ export const purchaseCreditsSchema = z.object({
     .positive()
     .refine((n) => n % 100 === 0, "Kontör 100'ün katı olmalı."),
 });
+
+/** Hizmet veren "işi tamamladım" derken gönderdiği bilgi. */
+export const deliverWorkSchema = z.object({
+  note: z.string().max(2000).optional(),
+  files: z.array(z.string().url()).max(10, "En fazla 10 dosya.").default([]),
+});
+
+export type DeliverWorkInput = z.infer<typeof deliverWorkSchema>;
+
+/** İtiraz açma. */
+export const disputeSchema = z.object({
+  reason: z
+    .string()
+    .min(10, "İtiraz nedenini en az 10 karakter yaz.")
+    .max(1000),
+});
+
+export type DisputeInput = z.infer<typeof disputeSchema>;
+
+/** Platform içi mesaj. */
+export const messageSchema = z
+  .object({
+    body: z.string().max(2000).optional(),
+    attachments: z.array(z.string().url()).max(5, "En fazla 5 ek.").default([]),
+  })
+  .refine((d) => (d.body && d.body.trim().length > 0) || d.attachments.length > 0, {
+    message: "Mesaj boş olamaz.",
+    path: ["body"],
+  });
+
+export type MessageInput = z.infer<typeof messageSchema>;

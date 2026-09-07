@@ -14,6 +14,9 @@ export const DEFAULT_OFFER_CREDIT_COST = 100;
 /** Müşterinin işi onaylaması için verilen süre (gün). */
 export const APPROVAL_WINDOW_DAYS = 3;
 
+/** Platform komisyon oranı — emanetteki tutardan kesilir (hizmet verene kalan = tutar - komisyon). */
+export const PLATFORM_COMMISSION_RATE = 0.1;
+
 export const CITIES = [
   "İstanbul",
   "Ankara",
