@@ -1,0 +1,594 @@
+// İşKalkan / isgarantim.com — Veritabanı Şeması
+// PostgreSQL + Prisma
+// Bu şema tüm iş varlıklarını kapsar. Faz faz API/UI ile bağlanacak.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUM'lar
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER // Hizmet alan
+  PROVIDER // Hizmet veren
+  JOBSEEKER // İş arayan
+  EMPLOYER // İşveren / firma
+  ADMIN // Yönetici
+}
+
+enum VerificationChannel {
+  EMAIL
+  PHONE
+}
+
+enum ServiceRequestStatus {
+  DRAFT // Taslak (çok adımlı form)
+  OPEN // Teklif topluyor
+  OFFER_SELECTED // Teklif seçildi, ödeme bekleniyor
+  IN_ESCROW // Ödeme emanette, iş devam ediyor
+  DELIVERED // Hizmet veren "tamamladım" dedi, onay bekliyor
+  COMPLETED // Müşteri onayladı, ödeme aktarıldı
+  DISPUTED // İtiraz açıldı
+  CANCELLED
+}
+
+enum OfferStatus {
+  PENDING // Verildi, kontör beklemede
+  WON // Kazandı, kontör kesildi
+  LOST // Kaybetti, kontör iade edildi
+  WITHDRAWN // Geri çekildi
+  EXPIRED
+}
+
+enum CreditTxType {
+  PURCHASE // Kontör satın alma (+)
+  HOLD // Teklif için beklemeye alma (-, rezerve)
+  CAPTURE // Kazanınca kesin kesinti (rezerveden düşer)
+  REFUND // Kaybedince/geri çekince iade (+)
+  ADMIN_ADJUST // Yönetici düzeltmesi
+}
+
+enum PaymentStatus {
+  PENDING // Ödeme başlatıldı
+  HELD // Emanette (escrow)
+  RELEASED // Hizmet verene aktarıldı
+  REFUNDED // Müşteriye iade
+  DISPUTED // İtiraz nedeniyle durduruldu
+  FAILED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_CUSTOMER // Müşteri lehine
+  RESOLVED_PROVIDER // Hizmet veren lehine
+  CLOSED
+}
+
+enum JobPostingStatus {
+  DRAFT
+  PENDING_PAYMENT
+  ACTIVE
+  PAUSED
+  EXPIRED
+  CLOSED
+}
+
+enum JobApplicationStatus {
+  APPLIED
+  REVIEWED
+  SHORTLISTED
+  INVITED // Görüşmeye davet edildi
+  REJECTED
+  HIRED
+}
+
+enum WorkType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  REMOTE
+  INTERN
+}
+
+enum SubscriptionPlan {
+  SINGLE // Tek ilan
+  PACKAGE // İlan paketi
+  MONTHLY // Aylık abonelik
+}
+
+// ─────────────────────────────────────────────
+// KULLANICI & KİMLİK
+// ─────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  phone         String?    @unique
+  passwordHash  String
+  fullName      String
+  avatarUrl     String?
+  roles         UserRole[] @default([CUSTOMER])
+  emailVerified DateTime?
+  phoneVerified DateTime?
+  isActive      Boolean    @default(true)
+  isBanned      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // İlişkiler
+  providerProfile  ProviderProfile?
+  companies        Company[]
+  creditWallet     CreditWallet?
+  cv               CV?
+  serviceRequests  ServiceRequest[] @relation("CustomerRequests")
+  offers           Offer[]
+  paymentsAsCustomer Payment[]      @relation("CustomerPayments")
+  reviewsWritten   Review[]         @relation("ReviewAuthor")
+  reviewsReceived  Review[]         @relation("ReviewTarget")
+  messages         Message[]
+  conversations    ConversationParticipant[]
+  jobApplications  JobApplication[]
+  notifications    Notification[]
+  complaintsFiled  Complaint[]      @relation("ComplaintReporter")
+  verificationTokens VerificationToken[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model VerificationToken {
+  id        String              @id @default(cuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel   VerificationChannel
+  code      String // 6 haneli kod (hash'lenmiş saklanır)
+  target    String // e-posta veya telefon
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime            @default(now())
+
+  @@index([userId, channel])
+}
+
+// ─────────────────────────────────────────────
+// HİZMET VEREN PROFİLİ & KONTÖR (ESCROW)
+// ─────────────────────────────────────────────
+
+model ProviderProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline       String? // "Boya & Badana Ustası"
+  bio            String?
+  city           String?
+  district       String?
+  categories     ServiceCategory[] @relation("ProviderCategories")
+  identityVerified Boolean @default(false) // Kimlik doğrulama
+  skillVerified  Boolean  @default(false) // Beceri/ustalık doğrulama
+  ratingAvg      Float    @default(0)
+  ratingCount    Int      @default(0)
+  completedJobs  Int      @default(0)
+  avgResponseMin Int? // Ortalama yanıt süresi (dk)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CreditWallet {
+  id           String            @id @default(cuid())
+  userId       String            @unique
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance      Int               @default(0) // Kullanılabilir kontör
+  heldBalance  Int               @default(0) // Beklemedeki (rezerve) kontör
+  transactions CreditTransaction[]
+  updatedAt    DateTime          @updatedAt
+}
+
+model CreditTransaction {
+  id          String       @id @default(cuid())
+  walletId    String
+  wallet      CreditWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type        CreditTxType
+  amount      Int // İşaretli miktar (+/-)
+  balanceAfter Int
+  offerId     String? // İlgili teklif (varsa)
+  note        String?
+  createdAt   DateTime     @default(now())
+
+  @@index([walletId])
+}
+
+// ─────────────────────────────────────────────
+// KATEGORİLER (Hizmet ve İş AYRI)
+// ─────────────────────────────────────────────
+
+model ServiceCategory {
+  id        String            @id @default(cuid())
+  name      String
+  slug      String            @unique
+  icon      String?
+  parentId  String?
+  parent    ServiceCategory?  @relation("ServiceCatTree", fields: [parentId], references: [id])
+  children  ServiceCategory[] @relation("ServiceCatTree")
+  isActive  Boolean           @default(true)
+  order     Int               @default(0)
+  requests  ServiceRequest[]
+  providers ProviderProfile[] @relation("ProviderCategories")
+  createdAt DateTime          @default(now())
+}
+
+model JobCategory {
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  icon      String?
+  parentId  String?
+  parent    JobCategory?  @relation("JobCatTree", fields: [parentId], references: [id])
+  children  JobCategory[] @relation("JobCatTree")
+  isActive  Boolean       @default(true)
+  order     Int           @default(0)
+  postings  JobPosting[]
+  createdAt DateTime      @default(now())
+}
+
+// ─────────────────────────────────────────────
+// HİZMET TALEBİ & TEKLİF
+// ─────────────────────────────────────────────
+
+model ServiceRequest {
+  id          String               @id @default(cuid())
+  customerId  String
+  customer    User                 @relation("CustomerRequests", fields: [customerId], references: [id])
+  categoryId  String
+  category    ServiceCategory      @relation(fields: [categoryId], references: [id])
+  subCategory String?
+  city        String
+  district    String?
+  title       String
+  description String
+  budgetMin   Int?
+  budgetMax   Int?
+  preferredDate DateTime?
+  photos      String[] // Yüklenen fotoğraf URL'leri
+  status      ServiceRequestStatus @default(OPEN)
+  offers      Offer[]
+  payment     Payment?
+  conversation Conversation?
+  dispute     Dispute?
+  review      Review?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([categoryId])
+  @@index([city])
+  @@index([status])
+}
+
+model Offer {
+  id                String        @id @default(cuid())
+  serviceRequestId  String
+  serviceRequest    ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  providerId        String
+  provider          User          @relation(fields: [providerId], references: [id])
+  price             Int // Teklif edilen iş ücreti (TL)
+  estimatedDuration String? // "2 gün", "1 hafta" vb.
+  message           String?
+  creditCost        Int           @default(100) // Bu teklif için harcanan kontör
+  status            OfferStatus   @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([serviceRequestId, providerId])
+  @@index([providerId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// ÖDEME (EMANET / ESCROW)
+// ─────────────────────────────────────────────
+
+model Payment {
+  id               String        @id @default(cuid())
+  serviceRequestId String        @unique
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  customerId       String
+  customer         User          @relation("CustomerPayments", fields: [customerId], references: [id])
+  providerId       String // Kazanan hizmet veren
+  amount           Int // İş ücreti (TL, kuruş bazlı tutmak istenirse ayarlanır)
+  platformFee      Int           @default(0) // Platform komisyonu
+  status           PaymentStatus @default(PENDING)
+  providerPayoutId String? // Ödeme kuruluşu alt üye işyeri/işlem referansı
+  externalRef      String? // iyzico/PayTR işlem referansı
+  heldAt           DateTime?
+  releasedAt       DateTime?
+  refundedAt       DateTime?
+  approvalDeadline DateTime? // Müşterinin onay için son tarihi (3 gün)
+  delivery         WorkDelivery?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model WorkDelivery {
+  id          String   @id @default(cuid())
+  paymentId   String   @unique
+  payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  note        String?
+  files       String[] // Yüklenen foto/belge URL'leri
+  deliveredAt DateTime @default(now())
+  approvedAt  DateTime?
+}
+
+// ─────────────────────────────────────────────
+// MESAJLAŞMA
+// ─────────────────────────────────────────────
+
+model Conversation {
+  id               String                    @id @default(cuid())
+  serviceRequestId String?                   @unique
+  serviceRequest   ServiceRequest?           @relation(fields: [serviceRequestId], references: [id])
+  contactUnlocked  Boolean                   @default(false) // Ödeme sonrası tel/adres açılır
+  participants     ConversationParticipant[]
+  messages         Message[]
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  body           String?
+  attachments    String[] // Foto/dosya URL'leri
+  isSystem       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+// ─────────────────────────────────────────────
+// DEĞERLENDİRME & ŞİKAYET / ANLAŞMAZLIK
+// ─────────────────────────────────────────────
+
+model Review {
+  id               String         @id @default(cuid())
+  serviceRequestId String         @unique
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  authorId         String
+  author           User           @relation("ReviewAuthor", fields: [authorId], references: [id])
+  targetId         String
+  target           User           @relation("ReviewTarget", fields: [targetId], references: [id])
+  rating           Int // 1-5
+  comment          String?
+  createdAt        DateTime       @default(now())
+
+  @@index([targetId])
+}
+
+model Complaint {
+  id          String   @id @default(cuid())
+  reporterId  String
+  reporter    User     @relation("ComplaintReporter", fields: [reporterId], references: [id])
+  subjectType String // "USER" | "SERVICE_REQUEST" | "JOB_POSTING" | "PAYMENT"
+  subjectId   String
+  reason      String
+  detail      String?
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Dispute {
+  id               String         @id @default(cuid())
+  serviceRequestId String         @unique
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  openedById       String
+  reason           String
+  status           DisputeStatus  @default(OPEN)
+  resolutionNote   String?
+  createdAt        DateTime       @default(now())
+  resolvedAt       DateTime?
+}
+
+// ─────────────────────────────────────────────
+// CV / ÖZGEÇMİŞ (İŞ ARAYAN)
+// ─────────────────────────────────────────────
+
+model CV {
+  id           String          @id @default(cuid())
+  userId       String          @unique
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String? // "Muhasebe Uzmanı"
+  summary      String?
+  phone        String?
+  email        String?
+  city         String?
+  birthYear    Int?
+  photoUrl     String?
+  isVisible    Boolean         @default(false) // Firmalara görünürlük izni
+  experiences  CVExperience[]
+  educations   CVEducation[]
+  skills       CVSkill[]
+  languages    CVLanguage[]
+  certificates CVCertificate[]
+  applications JobApplication[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model CVExperience {
+  id        String    @id @default(cuid())
+  cvId      String
+  cv        CV        @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  company   String
+  position  String
+  city      String?
+  startDate DateTime
+  endDate   DateTime?
+  current   Boolean   @default(false)
+  desc      String?
+}
+
+model CVEducation {
+  id        String    @id @default(cuid())
+  cvId      String
+  cv        CV        @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  school    String
+  degree    String?
+  field     String?
+  startDate DateTime?
+  endDate   DateTime?
+}
+
+model CVSkill {
+  id    String @id @default(cuid())
+  cvId  String
+  cv    CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  name  String
+  level Int    @default(3) // 1-5
+}
+
+model CVLanguage {
+  id    String @id @default(cuid())
+  cvId  String
+  cv    CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  name  String
+  level String // "A1".."C2" / "Anadil"
+}
+
+model CVCertificate {
+  id       String    @id @default(cuid())
+  cvId     String
+  cv       CV        @relation(fields: [cvId], references: [id], onDelete: Cascade)
+  name     String
+  issuer   String?
+  issuedAt DateTime?
+}
+
+// ─────────────────────────────────────────────
+// FİRMA & İŞ İLANI
+// ─────────────────────────────────────────────
+
+model Company {
+  id           String       @id @default(cuid())
+  ownerId      String
+  owner        User         @relation(fields: [ownerId], references: [id])
+  name         String
+  taxNumber    String?
+  logoUrl      String?
+  website      String?
+  about        String?
+  city         String?
+  verified     Boolean      @default(false)
+  postings     JobPosting[]
+  subscriptions CompanySubscription[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model CompanySubscription {
+  id          String           @id @default(cuid())
+  companyId   String
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan        SubscriptionPlan
+  postQuota   Int              @default(1) // Kalan ilan hakkı
+  amount      Int // Ödenen tutar
+  startsAt    DateTime         @default(now())
+  expiresAt   DateTime?
+  isActive    Boolean          @default(true)
+  externalRef String?
+  createdAt   DateTime         @default(now())
+}
+
+model JobPosting {
+  id           String           @id @default(cuid())
+  companyId    String
+  company      Company          @relation(fields: [companyId], references: [id])
+  categoryId   String
+  category     JobCategory      @relation(fields: [categoryId], references: [id])
+  title        String
+  description  String
+  city         String
+  district     String?
+  workType     WorkType
+  salaryMin    Int?
+  salaryMax    Int?
+  experienceMin Int? // yıl
+  educationLevel String?
+  languages    String[]
+  skills       String[]
+  status       JobPostingStatus @default(DRAFT)
+  publishedAt  DateTime?
+  expiresAt    DateTime?
+  applications JobApplication[]
+  invitations  InterviewInvitation[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([categoryId])
+  @@index([city])
+  @@index([status])
+}
+
+model JobApplication {
+  id          String               @id @default(cuid())
+  jobPostingId String
+  jobPosting  JobPosting           @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  applicantId String
+  applicant   User                 @relation(fields: [applicantId], references: [id])
+  cvId        String?
+  cv          CV?                  @relation(fields: [cvId], references: [id])
+  coverLetter String?
+  status      JobApplicationStatus @default(APPLIED)
+  createdAt   DateTime             @default(now())
+
+  @@unique([jobPostingId, applicantId])
+}
+
+model InterviewInvitation {
+  id           String     @id @default(cuid())
+  jobPostingId String
+  jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  candidateId  String
+  message      String?
+  proposedAt   DateTime?
+  createdAt    DateTime   @default(now())
+}
+
+// ─────────────────────────────────────────────
+// BİLDİRİMLER
+// ─────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
