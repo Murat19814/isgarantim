@@ -14,9 +14,17 @@ export type JobPosting = {
   title: string;
   city?: string | null;
   workType?: string | null;
+  description?: string | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
   company?: { name?: string | null; logoUrl?: string | null } | null;
   createdAt?: string;
 };
+
+/** İlanın web'deki detay/başvuru adresi. */
+export function jobWebUrl(id: string): string {
+  return `${API_BASE_URL}/is-ara/${id}`;
+}
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
