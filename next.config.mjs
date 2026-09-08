@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Webpack build'i ayrı worker sürecinde değil ana süreçte çalıştır.
+  // Kısıtlı/özel sunucularda worker çökmesi kaynaklı build takılmalarını önler.
+  experimental: {
+    webpackBuildWorker: false,
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
