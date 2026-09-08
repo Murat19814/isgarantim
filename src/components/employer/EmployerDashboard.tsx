@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Loader2, Save, Ticket, Check } from "lucide-react";
 import { CITIES, JOB_PLANS } from "@/lib/constants";
 import { formatTRY } from "@/lib/utils";
+import { FileUpload } from "@/components/ui/FileUpload";
 
 type Company = {
   name: string;
@@ -120,7 +121,22 @@ export function EmployerDashboard({
                 {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
               <input className="input" placeholder="Web sitesi (https://...)" value={company?.website ?? ""} onChange={(e) => set("website", e.target.value)} />
-              <input className="input sm:col-span-2" placeholder="Logo URL (https://...)" value={company?.logoUrl ?? ""} onChange={(e) => set("logoUrl", e.target.value)} />
+            </div>
+            <div className="flex items-center gap-3">
+              {company?.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={company.logoUrl} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-navy-100 object-contain" />
+              )}
+              <FileUpload
+                accept="image/*"
+                label={company?.logoUrl ? "Logoyu değiştir" : "Logo yükle"}
+                onUploaded={(url) => set("logoUrl", url)}
+              />
+              {company?.logoUrl && (
+                <button type="button" onClick={() => set("logoUrl", "")} className="text-xs text-navy-400 hover:text-red-600">
+                  Kaldır
+                </button>
+              )}
             </div>
             <textarea className="input resize-none" rows={3} placeholder="Firma hakkında" value={company?.about ?? ""} onChange={(e) => set("about", e.target.value)} />
             <button onClick={saveCompany} disabled={saving || !company?.name} className="btn-primary">

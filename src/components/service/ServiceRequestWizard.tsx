@@ -6,6 +6,7 @@ import {
   Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
+import { FileUpload } from "@/components/ui/FileUpload";
 
 type Category = { id: string; name: string; children: { id: string; name: string }[] };
 
@@ -291,9 +292,18 @@ export function ServiceRequestWizard({
             <ImagePlus className="h-5 w-5 text-emerald-600" /> Fotoğraf ekle (opsiyonel)
           </h2>
           <p className="text-sm text-navy-500">
-            Şimdilik görsel bağlantısı (URL) ekleyebilirsin. Dosya yükleme (Cloudinary)
-            entegrasyonu bu fazın devamında gelecek.
+            Cihazından fotoğraf yükleyebilir ya da bir görsel bağlantısı (URL)
+            ekleyebilirsin. En fazla 8 görsel, dosya başına 5 MB.
           </p>
+          <FileUpload
+            accept="image/*"
+            label="Cihazdan fotoğraf yükle"
+            disabled={photos.length >= 8}
+            onUploaded={(url) => {
+              setPhotos((p) => (p.length >= 8 ? p : [...p, url]));
+              setError(null);
+            }}
+          />
           <div className="flex gap-2">
             <input
               value={photoInput}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { VerificationChannel } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { issueVerificationCode } from "@/lib/auth/verification";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   userId: z.string().min(1),
@@ -10,6 +11,14 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`resend:${clientIp(req)}`, 3, 10 * 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Çok sık kod istedin. Lütfen biraz bekle." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 422 });

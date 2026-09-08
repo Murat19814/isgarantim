@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WORK_TYPE_VALUES } from "@/lib/constants";
+import { optionalMediaUrl } from "@/lib/validations/common";
 
 // ─────────────────────────────────────────────
 // CV / ÖZGEÇMİŞ
@@ -56,7 +57,7 @@ export const cvSchema = z.object({
     .min(1940)
     .max(new Date().getFullYear())
     .optional(),
-  photoUrl: z.string().url().optional().or(z.literal("").transform(() => undefined)),
+  photoUrl: optionalMediaUrl,
   isVisible: z.boolean().default(false),
   experiences: z.array(cvExperienceSchema).max(20).default([]),
   educations: z.array(cvEducationSchema).max(20).default([]),
@@ -74,7 +75,7 @@ export type CVInput = z.infer<typeof cvSchema>;
 export const companySchema = z.object({
   name: z.string().min(2, "Firma adı gerekli.").max(160),
   taxNumber: z.string().max(30).optional(),
-  logoUrl: z.string().url().optional().or(z.literal("").transform(() => undefined)),
+  logoUrl: optionalMediaUrl,
   website: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   about: z.string().max(2000).optional(),
   city: z.string().max(60).optional(),

@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "İşKalkan",
+    "slug": "iskalkan",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "iskalkan",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1F3A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.isgarantim.iskalkan"
+    },
+    "android": {
+      "package": "com.isgarantim.iskalkan"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "apiBaseUrl": "https://isgarantim.com"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { mediaUrl } from "@/lib/validations/common";
 
 export const serviceRequestSchema = z
   .object({
@@ -11,7 +12,7 @@ export const serviceRequestSchema = z
     budgetMin: z.number().int().positive().optional(),
     budgetMax: z.number().int().positive().optional(),
     preferredDate: z.string().datetime().optional().or(z.literal("").transform(() => undefined)),
-    photos: z.array(z.string().url()).max(8, "En fazla 8 fotoğraf.").default([]),
+    photos: z.array(mediaUrl).max(8, "En fazla 8 fotoğraf.").default([]),
   })
   .refine(
     (d) => !d.budgetMin || !d.budgetMax || d.budgetMax >= d.budgetMin,
@@ -39,7 +40,7 @@ export const purchaseCreditsSchema = z.object({
 /** Hizmet veren "işi tamamladım" derken gönderdiği bilgi. */
 export const deliverWorkSchema = z.object({
   note: z.string().max(2000).optional(),
-  files: z.array(z.string().url()).max(10, "En fazla 10 dosya.").default([]),
+  files: z.array(mediaUrl).max(10, "En fazla 10 dosya.").default([]),
 });
 
 export type DeliverWorkInput = z.infer<typeof deliverWorkSchema>;
@@ -58,7 +59,7 @@ export type DisputeInput = z.infer<typeof disputeSchema>;
 export const messageSchema = z
   .object({
     body: z.string().max(2000).optional(),
-    attachments: z.array(z.string().url()).max(5, "En fazla 5 ek.").default([]),
+    attachments: z.array(mediaUrl).max(5, "En fazla 5 ek.").default([]),
   })
   .refine((d) => (d.body && d.body.trim().length > 0) || d.attachments.length > 0, {
     message: "Mesaj boş olamaz.",

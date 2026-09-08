@@ -7,6 +7,7 @@ import {
   Wrench, Languages, Award, User, Globe,
 } from "lucide-react";
 import { CITIES, EDUCATION_LEVELS, LANGUAGE_LEVELS } from "@/lib/constants";
+import { FileUpload } from "@/components/ui/FileUpload";
 
 export type CVData = {
   title: string;
@@ -134,8 +135,23 @@ export function CVBuilder({ initial }: { initial: CVData | null }) {
           <Field label="Doğum yılı">
             <input type="number" className="input" value={cv.birthYear} onChange={(e) => set("birthYear", e.target.value)} placeholder="1990" />
           </Field>
-          <Field label="Fotoğraf URL (opsiyonel)">
-            <input className="input" value={cv.photoUrl} onChange={(e) => set("photoUrl", e.target.value)} placeholder="https://..." />
+          <Field label="Fotoğraf (opsiyonel)">
+            <div className="flex items-center gap-3">
+              {cv.photoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={cv.photoUrl} alt="" className="h-14 w-14 shrink-0 rounded-full border border-navy-100 object-cover" />
+              )}
+              <FileUpload
+                accept="image/*"
+                label={cv.photoUrl ? "Değiştir" : "Fotoğraf yükle"}
+                onUploaded={(url) => set("photoUrl", url)}
+              />
+              {cv.photoUrl && (
+                <button type="button" onClick={() => set("photoUrl", "")} className="text-xs text-navy-400 hover:text-red-600">
+                  Kaldır
+                </button>
+              )}
+            </div>
           </Field>
         </div>
         <Field label="Özet / Hakkımda">

@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck, Loader2, CheckCircle2, Clock, Wallet, FileText,
-  Phone, Mail, Lock, PartyPopper, Gavel, Upload, AlertTriangle,
+  Phone, Mail, Lock, PartyPopper, Gavel, AlertTriangle,
 } from "lucide-react";
 import { formatTRY } from "@/lib/utils";
+import { FileUpload } from "@/components/ui/FileUpload";
 
 type Delivery = {
   note: string | null;
@@ -68,11 +69,6 @@ export function ProviderWorkflow({
     } finally {
       setLoading(null);
     }
-  }
-
-  function addFile() {
-    const url = window.prompt("Foto/belge URL'si yapıştır:");
-    if (url && /^https?:\/\//.test(url)) setFiles((f) => [...f, url]);
   }
 
   return (
@@ -154,12 +150,16 @@ export function ProviderWorkflow({
               placeholder="Yapılan işi kısaca özetle..."
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <button onClick={addFile} className="btn-outline text-sm">
-                <Upload className="h-4 w-4" /> Foto/belge ekle
-              </button>
+              <FileUpload
+                accept="image/*,application/pdf"
+                label="Foto/belge ekle"
+                onUploaded={(url) => setFiles((f) => [...f, url])}
+              />
               {files.map((f, i) => (
                 <span key={i} className="inline-flex items-center gap-1 rounded-full bg-navy-100 px-2 py-0.5 text-xs text-navy-600">
-                  <FileText className="h-3 w-3" /> Dosya {i + 1}
+                  <a href={f} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-navy-900">
+                    <FileText className="h-3 w-3" /> Dosya {i + 1}
+                  </a>
                   <button
                     onClick={() => setFiles((arr) => arr.filter((_, j) => j !== i))}
                     className="ml-1 text-navy-400 hover:text-red-600"

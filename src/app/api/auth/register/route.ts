@@ -4,8 +4,17 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { registerSchema, normalizePhone } from "@/lib/validations/auth";
 import { issueVerificationCode } from "@/lib/auth/verification";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`register:${clientIp(req)}`, 5, 10 * 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Çok fazla deneme. Lütfen biraz sonra tekrar dene." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
