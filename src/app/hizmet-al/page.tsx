@@ -1,13 +1,8 @@
-import { PagePlaceholder } from "@/components/PagePlaceholder";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Hizmet Al" };
 
+/** Herkese açık giriş noktası — müşteriyi hizmet talebi oluşturma akışına yönlendirir. */
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Hizmet Al"
-      description="Çok adımlı hizmet talebi formu, kategori/şehir/bütçe seçimi ve teklif karşılaştırma ekranı bu bölümde olacak."
-      phase="Faz 3 — Hizmet talebi & teklif akışı"
-    />
-  );
+  redirect("/panel/hizmet-al/yeni");
 }
