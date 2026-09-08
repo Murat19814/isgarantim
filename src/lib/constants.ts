@@ -65,8 +65,50 @@ export const JOB_CATEGORIES = [
   { slug: "cagri-merkezi", name: "Çağrı Merkezi", icon: "Headset" },
 ] as const;
 
-/** Çalışma şekli seçenekleri */
+/** Çalışma şekli seçenekleri (UI etiketleri) */
 export const WORK_TYPES = ["Tam Zamanlı", "Yarı Zamanlı", "Sözleşmeli", "Uzaktan", "Stajyer"] as const;
+
+/** WorkType enum ↔ Türkçe etiket */
+export const WORK_TYPE_LABELS: Record<string, string> = {
+  FULL_TIME: "Tam Zamanlı",
+  PART_TIME: "Yarı Zamanlı",
+  CONTRACT: "Sözleşmeli",
+  REMOTE: "Uzaktan",
+  INTERN: "Stajyer",
+};
+
+export const WORK_TYPE_VALUES = [
+  "FULL_TIME",
+  "PART_TIME",
+  "CONTRACT",
+  "REMOTE",
+  "INTERN",
+] as const;
+
+/** Eğitim seviyeleri */
+export const EDUCATION_LEVELS = [
+  "İlköğretim",
+  "Lise",
+  "Ön Lisans",
+  "Lisans",
+  "Yüksek Lisans",
+  "Doktora",
+] as const;
+
+/** Yabancı dil seviyeleri */
+export const LANGUAGE_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2", "Anadil"] as const;
+
+/**
+ * İş ilanı planları (mock ödeme ile satın alınır).
+ * quota: yayınlanabilecek ilan sayısı, days: ilan aktif kalma süresi.
+ */
+export const JOB_PLANS = [
+  { id: "SINGLE", name: "Tek İlan", quota: 1, price: 750, days: 30, desc: "Tek bir iş ilanı, 30 gün yayında." },
+  { id: "PACKAGE", name: "5 İlan Paketi", quota: 5, price: 3000, days: 60, desc: "5 ilan hakkı, her biri 60 gün yayında." },
+  { id: "MONTHLY", name: "Aylık Abonelik", quota: 9999, price: 5000, days: 30, desc: "Sınırsız ilan, 30 gün boyunca." },
+] as const;
+
+export type JobPlanId = (typeof JOB_PLANS)[number]["id"];
 
 export type UserRole = "customer" | "provider" | "jobseeker" | "employer" | "admin";
 
