@@ -21,7 +21,7 @@ export async function POST(
 
   try {
     const result = await openDispute(user.id, params.id, parsed.data.reason);
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json(result);
   } catch (e) {
     if (e instanceof PaymentError)
       return NextResponse.json({ error: e.message }, { status: 400 });

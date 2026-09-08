@@ -27,7 +27,7 @@ export async function POST(
 
   try {
     const result = await deliverWork(user.id, params.id, parsed.data);
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json(result);
   } catch (e) {
     if (e instanceof PaymentError)
       return NextResponse.json({ error: e.message }, { status: 400 });
