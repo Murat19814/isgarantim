@@ -20,3 +20,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 export function hasRole(user: SessionUser | null, role: UserRole): boolean {
   return !!user?.roles?.includes(role);
 }
+
+/** Kullanıcı ADMIN mi? */
+export function isAdmin(user: SessionUser | null): boolean {
+  return hasRole(user, UserRole.ADMIN);
+}
