@@ -1,5 +1,6 @@
 import { ServiceRequestStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { notify } from "@/lib/services/notifications";
 import type { ReviewInput } from "@/lib/validations/service";
 
 export class ReviewError extends Error {}
@@ -60,8 +61,8 @@ export async function createReview(
   if (!providerId)
     throw new ReviewError("Değerlendirilecek hizmet veren bulunamadı.");
 
-  return prisma.$transaction(async (tx) => {
-    const created = await tx.review.create({
+  const created = await prisma.$transaction(async (tx) => {
+    const review = await tx.review.create({
       data: {
         serviceRequestId: requestId,
         authorId: userId,
@@ -85,6 +86,16 @@ export async function createReview(
       },
     });
 
-    return created;
+    return review;
   });
+
+  // Hizmet verene bildirim
+  await notify(providerId, {
+    type: "REVIEW_RECEIVED",
+    title: "Yeni değerlendirme aldın ⭐",
+    body: `Bir müşteri sana ${input.rating}/5 puan verdi.`,
+    link: `/panel/hizmet-ver/${requestId}`,
+  });
+
+  return created;
 }

@@ -9,6 +9,7 @@ import {
   APPROVAL_WINDOW_DAYS,
   PLATFORM_COMMISSION_RATE,
 } from "@/lib/constants";
+import { notify } from "@/lib/services/notifications";
 import type { DeliverWorkInput } from "@/lib/validations/service";
 
 export class PaymentError extends Error {}
@@ -50,8 +51,8 @@ export async function fundEscrow(customerId: string, requestId: string) {
   const { platformFee } = computeFees(request.payment.amount);
   const providerId = request.payment.providerId;
 
-  return prisma.$transaction(async (tx) => {
-    const payment = await tx.payment.update({
+  const payment = await prisma.$transaction(async (tx) => {
+    const updated = await tx.payment.update({
       where: { id: request.payment!.id },
       data: {
         status: PaymentStatus.HELD,
@@ -83,8 +84,18 @@ export async function fundEscrow(customerId: string, requestId: string) {
     // Sistem mesajı
     await addSystemMessageTx(tx, requestId, "Ödeme emanete alındı. İletişim bilgileri artık görünür.");
 
-    return payment;
+    return updated;
   });
+
+  // Hizmet verene bildirim: işe başlayabilir
+  await notify(providerId, {
+    type: "ESCROW_FUNDED",
+    title: "Ödeme emanete alındı",
+    body: `"${request.title}" için ödeme güvenceye alındı. İşe başlayabilirsin.`,
+    link: `/panel/hizmet-ver/${requestId}`,
+  });
+
+  return payment;
 }
 
 /**
@@ -114,7 +125,7 @@ export async function deliverWork(
   const deadline = new Date();
   deadline.setDate(deadline.getDate() + APPROVAL_WINDOW_DAYS);
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await tx.workDelivery.upsert({
       where: { paymentId: request.payment!.id },
       update: {
@@ -148,6 +159,16 @@ export async function deliverWork(
 
     return { ok: true };
   });
+
+  // Müşteriye bildirim: onayına sunuldu
+  await notify(request.customerId, {
+    type: "WORK_DELIVERED",
+    title: "İş teslim edildi",
+    body: `"${request.title}" işi tamamlandı olarak işaretlendi. Kontrol edip onaylayabilirsin.`,
+    link: `/panel/hizmet-al/${requestId}`,
+  });
+
+  return result;
 }
 
 /**
@@ -173,7 +194,7 @@ export async function approveWork(customerId: string, requestId: string) {
 
   const providerId = request.payment.providerId;
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: request.payment!.id },
       data: { status: PaymentStatus.RELEASED, releasedAt: new Date() },
@@ -205,6 +226,16 @@ export async function approveWork(customerId: string, requestId: string) {
 
     return { ok: true };
   });
+
+  // Hizmet verene bildirim: ödeme aktarıldı
+  await notify(providerId, {
+    type: "WORK_APPROVED",
+    title: "İşin onaylandı 🎉",
+    body: `"${request.title}" işini müşteri onayladı. Ödeme hesabına aktarıldı.`,
+    link: `/panel/hizmet-ver/${requestId}`,
+  });
+
+  return result;
 }
 
 /**
@@ -240,7 +271,7 @@ export async function openDispute(
   if (request.dispute)
     throw new PaymentError("Bu talep için zaten bir itiraz açık.");
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await tx.dispute.create({
       data: {
         serviceRequestId: requestId,
@@ -268,6 +299,19 @@ export async function openDispute(
 
     return { ok: true };
   });
+
+  // Karşı tarafa bildirim
+  const otherId = isCustomer ? request.payment.providerId : request.customerId;
+  await notify(otherId, {
+    type: "DISPUTE_OPENED",
+    title: "Bir itiraz açıldı",
+    body: `"${request.title}" için itiraz açıldı. Ödeme, çözüme kadar durduruldu.`,
+    link: isCustomer
+      ? `/panel/hizmet-ver/${requestId}`
+      : `/panel/hizmet-al/${requestId}`,
+  });
+
+  return result;
 }
 
 /** Konuşma varsa sistem mesajı ekler (tx içinde). Konuşma yoksa sessizce geçer. */

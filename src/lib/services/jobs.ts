@@ -5,6 +5,7 @@ import {
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { JOB_PLANS } from "@/lib/constants";
+import { notify } from "@/lib/services/notifications";
 import type {
   JobPostingInput,
   jobFilterSchema,
@@ -151,7 +152,7 @@ export async function applyToJob(
 ) {
   const posting = await prisma.jobPosting.findUnique({
     where: { id: postingId },
-    select: { id: true, status: true, company: { select: { ownerId: true } } },
+    select: { id: true, status: true, title: true, company: { select: { ownerId: true } } },
   });
   if (!posting) throw new JobError("İlan bulunamadı.");
   if (posting.status !== JobPostingStatus.ACTIVE)
@@ -166,7 +167,7 @@ export async function applyToJob(
 
   const cv = await prisma.cV.findUnique({ where: { userId }, select: { id: true } });
 
-  return prisma.jobApplication.create({
+  const application = await prisma.jobApplication.create({
     data: {
       jobPostingId: postingId,
       applicantId: userId,
@@ -175,6 +176,16 @@ export async function applyToJob(
       status: JobApplicationStatus.APPLIED,
     },
   });
+
+  // İşverene bildirim
+  await notify(posting.company.ownerId, {
+    type: "JOB_APPLICATION",
+    title: "Yeni başvuru aldın",
+    body: `"${posting.title}" ilanına yeni bir başvuru geldi.`,
+    link: `/panel/isveren/ilan/${postingId}`,
+  });
+
+  return application;
 }
 
 /** Kullanıcının belirli ilana başvurusu (yoksa null). */
@@ -260,16 +271,39 @@ export async function updateApplicationStatus(
 ) {
   const app = await prisma.jobApplication.findUnique({
     where: { id: applicationId },
-    select: { id: true, jobPosting: { select: { company: { select: { ownerId: true } } } } },
+    select: {
+      id: true,
+      applicantId: true,
+      jobPosting: {
+        select: { title: true, company: { select: { ownerId: true } } },
+      },
+    },
   });
   if (!app) throw new JobError("Başvuru bulunamadı.");
   if (app.jobPosting.company.ownerId !== userId)
     throw new JobError("Bu başvuruyu düzenleyemezsin.");
 
-  return prisma.jobApplication.update({
+  const updated = await prisma.jobApplication.update({
     where: { id: applicationId },
     data: { status },
   });
+
+  // Adaya bildirim
+  const statusLabel: Record<string, string> = {
+    APPLIED: "başvuruldu",
+    REVIEWED: "incelendi",
+    INVITED: "görüşmeye davet edildi",
+    REJECTED: "olumsuz sonuçlandı",
+    HIRED: "işe alındı",
+  };
+  await notify(app.applicantId, {
+    type: "APPLICATION_STATUS",
+    title: "Başvuru durumun güncellendi",
+    body: `"${app.jobPosting.title}" başvurun: ${statusLabel[status] ?? status}.`,
+    link: `/panel/is-ara`,
+  });
+
+  return updated;
 }
 
 // ─────────────────────────────────────────────
@@ -372,14 +406,14 @@ export async function inviteCandidate(
 ) {
   const posting = await prisma.jobPosting.findUnique({
     where: { id: postingId },
-    select: { id: true, company: { select: { ownerId: true } } },
+    select: { id: true, title: true, company: { select: { ownerId: true } } },
   });
   if (!posting) throw new JobError("İlan bulunamadı.");
   if (posting.company.ownerId !== userId)
     throw new JobError("Bu ilana davet gönderemezsin.");
 
-  return prisma.$transaction(async (tx) => {
-    const invitation = await tx.interviewInvitation.create({
+  const invitation = await prisma.$transaction(async (tx) => {
+    const created = await tx.interviewInvitation.create({
       data: {
         jobPostingId: postingId,
         candidateId,
@@ -394,6 +428,16 @@ export async function inviteCandidate(
       data: { status: JobApplicationStatus.INVITED },
     });
 
-    return invitation;
+    return created;
   });
+
+  // Adaya bildirim
+  await notify(candidateId, {
+    type: "INTERVIEW_INVITE",
+    title: "Görüşme davetin var 📩",
+    body: `"${posting.title}" ilanı için görüşmeye davet edildin.`,
+    link: `/panel/is-ara`,
+  });
+
+  return invitation;
 }

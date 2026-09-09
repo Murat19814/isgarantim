@@ -1,5 +1,6 @@
 import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { notify } from "@/lib/services/notifications";
 import type { MessageInput } from "@/lib/validations/service";
 
 export class MessagingError extends Error {}
@@ -124,6 +125,35 @@ export async function sendMessage(
     where: { conversationId_userId: { conversationId, userId } },
     data: { lastReadAt: new Date() },
   });
+
+  // Diğer katılımcı(lar)a bildirim
+  const convo = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      serviceRequestId: true,
+      serviceRequest: { select: { customerId: true, title: true } },
+      participants: { select: { userId: true } },
+    },
+  });
+  if (convo) {
+    const senderName =
+      (await prisma.user.findUnique({
+        where: { id: userId },
+        select: { fullName: true },
+      }))?.fullName ?? "Bir kullanıcı";
+    for (const p of convo.participants) {
+      if (p.userId === userId) continue;
+      const isCustomer = p.userId === convo.serviceRequest?.customerId;
+      await notify(p.userId, {
+        type: "MESSAGE_RECEIVED",
+        title: `Yeni mesaj: ${senderName}`,
+        body: `"${convo.serviceRequest?.title ?? "talep"}" hakkında yeni bir mesajın var.`,
+        link: isCustomer
+          ? `/panel/hizmet-al/${convo.serviceRequestId}`
+          : `/panel/hizmet-ver/${convo.serviceRequestId}`,
+      });
+    }
+  }
 
   return message;
 }

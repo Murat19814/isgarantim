@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export default function PanelLayout({
   children,
@@ -21,6 +22,7 @@ export default function PanelLayout({
             </span>
           </Link>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <Link href="/" className="btn-ghost text-sm">
               Siteye dön
             </Link>
