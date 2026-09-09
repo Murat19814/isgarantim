@@ -8,6 +8,25 @@ export const APP_NAME = "İşKalkan";
 export const APP_DOMAIN = "isgarantim.com";
 export const APP_SLOGAN = "İşin de ödemen de güvende";
 
+/**
+ * Yasal/kurumsal bilgiler — tek kaynak.
+ * ⚠️ Köşeli parantezli alanları gerçek firma bilgilerinle DOLDUR.
+ * (Ticari ünvan, MERSİS, adres, vergi dairesi vb. yasal metinlerde zorunludur.)
+ */
+export const LEGAL = {
+  companyName: "[Firma Ticari Ünvanı]",
+  tradeName: "İşKalkan",
+  address: "[Açık Adres, İlçe/İl]",
+  mersis: "[MERSİS No]",
+  taxOffice: "[Vergi Dairesi]",
+  taxNumber: "[Vergi/TC Kimlik No]",
+  kepAddress: "[KEP Adresi]",
+  phone: "[Telefon]",
+  supportEmail: "destek@isgarantim.com",
+  kvkkEmail: "kvkk@isgarantim.com",
+  lastUpdated: "10.09.2026",
+} as const;
+
 /** Teklif için harcanan varsayılan kontör bedeli. */
 export const DEFAULT_OFFER_CREDIT_COST = 100;
 
