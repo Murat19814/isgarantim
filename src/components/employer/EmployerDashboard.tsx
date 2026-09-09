@@ -31,7 +31,6 @@ export function EmployerDashboard({
   );
   const [editing, setEditing] = useState(!hasCompany);
   const [saving, setSaving] = useState(false);
-  const [buying, setBuying] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   function set<K extends keyof NonNullable<Company>>(k: K, v: string) {
@@ -63,26 +62,6 @@ export function EmployerDashboard({
       setErr("Sunucuya ulaşılamadı.");
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function buyPlan(planId: string) {
-    setBuying(planId);
-    setErr(null);
-    try {
-      const res = await fetch("/api/companies/plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErr(data.error ?? "Satın alınamadı.");
-        return;
-      }
-      router.refresh();
-    } finally {
-      setBuying(null);
     }
   }
 
@@ -165,25 +144,30 @@ export function EmployerDashboard({
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {JOB_PLANS.map((p) => (
-              <div key={p.id} className="rounded-xl border border-navy-100 p-4">
+              <div key={p.id} className="relative rounded-xl border border-navy-100 p-4">
+                <span className="absolute right-3 top-3 rounded-full bg-gold-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold-600">
+                  Yakında
+                </span>
                 <p className="font-semibold text-navy-900">{p.name}</p>
                 <p className="mt-1 font-display text-2xl font-extrabold text-navy-900">
                   {formatTRY(p.price)}
                 </p>
                 <p className="mt-1 text-xs text-navy-500">{p.desc}</p>
                 <button
-                  onClick={() => buyPlan(p.id)}
-                  disabled={buying !== null}
-                  className="btn-outline mt-3 w-full text-sm"
+                  disabled
+                  aria-disabled="true"
+                  title="Online ödeme çok yakında"
+                  className="btn-outline mt-3 w-full cursor-not-allowed text-sm opacity-60"
                 >
-                  {buying === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  Satın al
+                  <Check className="h-4 w-4" /> Satın al
                 </button>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-navy-400">
-            Test modu — gerçek ödeme entegrasyonu sonra bağlanacak.
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-navy-500">
+            <span className="text-base leading-none">💳</span>
+            Online ödeme çok yakında aktif olacak. Şu an lansmana özel{" "}
+            <span className="font-semibold text-emerald-600">ilk 6 ilan ücretsiz</span>.
           </p>
         </div>
       )}
