@@ -17,13 +17,33 @@ export function CtaMobile() {
               başvur — hepsi tek uygulamada. Android ve iOS için yakında.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <button className="btn bg-white text-navy-900 hover:bg-navy-50">
+              <button
+                disabled
+                aria-disabled="true"
+                title="Çok yakında yayında"
+                className="btn cursor-not-allowed bg-white/90 text-navy-900 opacity-90"
+              >
                 <Apple className="h-5 w-5" /> App Store
+                <span className="ml-1.5 rounded-full bg-gold-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold-600">
+                  Yakında
+                </span>
               </button>
-              <button className="btn bg-white text-navy-900 hover:bg-navy-50">
+              <button
+                disabled
+                aria-disabled="true"
+                title="Çok yakında yayında"
+                className="btn cursor-not-allowed bg-white/90 text-navy-900 opacity-90"
+              >
                 <Play className="h-5 w-5" /> Google Play
+                <span className="ml-1.5 rounded-full bg-gold-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gold-600">
+                  Yakında
+                </span>
               </button>
             </div>
+            <p className="mt-3 flex items-center gap-1.5 text-xs text-navy-200">
+              <Smartphone className="h-3.5 w-3.5 text-gold-400" />
+              Mobil uygulamamız çok yakında App Store ve Google Play&apos;de!
+            </p>
           </div>
 
           <div className="relative hidden justify-end lg:flex">

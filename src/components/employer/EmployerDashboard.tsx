@@ -156,6 +156,13 @@ export function EmployerDashboard({
             </h2>
             <span className="badge-emerald">Kalan: {remainingQuota}</span>
           </div>
+          <div className="mb-4 flex items-start gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
+            <Ticket className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              <span className="font-bold">Lansmana özel:</span> İlk <span className="font-bold">6 iş ilanın ücretsiz!</span>{" "}
+              Hakkın bittiğinde aşağıdaki planlardan biriyle devam edebilirsin.
+            </p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {JOB_PLANS.map((p) => (
               <div key={p.id} className="rounded-xl border border-navy-100 p-4">

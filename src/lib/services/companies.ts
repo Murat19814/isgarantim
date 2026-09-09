@@ -5,11 +5,52 @@ import type { CompanyInput } from "@/lib/validations/jobs";
 
 export class CompanyError extends Error {}
 
+/** Lansman kampanyası: her firmaya ilk 6 ilan ücretsiz. */
+export const FREE_WELCOME_QUOTA = 6;
+const FREE_WELCOME_REF = "FREE_WELCOME_LAUNCH";
+
+/**
+ * Firmaya bir defaya mahsus ücretsiz ilan hakkını tanımlar (yoksa oluşturur).
+ * externalRef ile işaretlendiği için tekrar tekrar verilmez.
+ */
+export async function ensureWelcomeCredits(companyId: string) {
+  const existing = await prisma.companySubscription.findFirst({
+    where: { companyId, externalRef: FREE_WELCOME_REF },
+    select: { id: true },
+  });
+  if (existing) return;
+  try {
+    await prisma.companySubscription.create({
+      data: {
+        companyId,
+        plan: SubscriptionPlan.PACKAGE,
+        postQuota: FREE_WELCOME_QUOTA,
+        amount: 0,
+        expiresAt: null, // süresiz — kullanılana kadar geçerli
+        isActive: true,
+        externalRef: FREE_WELCOME_REF,
+      },
+    });
+  } catch (e) {
+    // Yarış durumunda çift kayıt olursa sessizce geç
+    console.error("[ensureWelcomeCredits] atlandı:", e);
+  }
+}
+
 /** Kullanıcının ilk firmasını (aktif abonelikleriyle) getirir. */
 export async function getMyCompany(userId: string) {
-  return prisma.company.findFirst({
+  const company = await prisma.company.findFirst({
     where: { ownerId: userId },
     orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  if (!company) return null;
+
+  // Ücretsiz lansman hakkını garanti et
+  await ensureWelcomeCredits(company.id);
+
+  return prisma.company.findUnique({
+    where: { id: company.id },
     include: {
       subscriptions: {
         where: { isActive: true },

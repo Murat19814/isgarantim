@@ -80,7 +80,7 @@ export default async function Page() {
           </h2>
           {postings.length === 0 ? (
             <p className="card p-4 text-sm text-navy-400">
-              Henüz ilanın yok. Plan satın alıp ilk ilanını yayınla.
+              Henüz ilanın yok. Lansmana özel <span className="font-semibold text-emerald-600">ilk 6 ilan ücretsiz</span> — hemen ilk ilanını yayınla!
             </p>
           ) : (
             <div className="space-y-3">

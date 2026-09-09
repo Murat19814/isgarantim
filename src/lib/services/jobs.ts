@@ -6,6 +6,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { JOB_PLANS } from "@/lib/constants";
 import { notify } from "@/lib/services/notifications";
+import { ensureWelcomeCredits } from "@/lib/services/companies";
 import type {
   JobPostingInput,
   jobFilterSchema,
@@ -34,6 +35,9 @@ export async function createJobPosting(userId: string, input: JobPostingInput) {
     orderBy: { createdAt: "asc" },
   });
   if (!company) throw new JobError("Önce firma profilini oluşturmalısın.");
+
+  // Lansman kampanyası: ilk 6 ilan ücretsiz (yoksa tanımla)
+  await ensureWelcomeCredits(company.id);
 
   const now = new Date();
   const subs = await prisma.companySubscription.findMany({
