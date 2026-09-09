@@ -67,3 +67,15 @@ export const messageSchema = z
   });
 
 export type MessageInput = z.infer<typeof messageSchema>;
+
+/** Değerlendirme / puanlama (müşteri → hizmet veren). */
+export const reviewSchema = z.object({
+  rating: z
+    .number({ invalid_type_error: "Puan seç." })
+    .int()
+    .min(1, "Puan 1-5 arası olmalı.")
+    .max(5, "Puan 1-5 arası olmalı."),
+  comment: z.string().max(1000, "Yorum en fazla 1000 karakter.").optional(),
+});
+
+export type ReviewInput = z.infer<typeof reviewSchema>;

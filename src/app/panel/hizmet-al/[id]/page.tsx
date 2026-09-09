@@ -6,6 +6,7 @@ import {
   getRequestWithOffers,
   getRequestWorkflow,
 } from "@/lib/services/serviceRequests";
+import { getReviewForRequest } from "@/lib/services/reviews";
 import { getOrCreateConversationForRequest } from "@/lib/services/messaging";
 import { formatTRY } from "@/lib/utils";
 import { OfferComparison } from "@/components/service/OfferComparison";
@@ -37,6 +38,12 @@ export default async function Page({ params }: { params: { id: string } }) {
     ).catch(() => null);
     conversationId = convo?.id ?? null;
   }
+
+  // Tamamlanan işlerde mevcut değerlendirmeyi getir.
+  const existingReview =
+    workflow?.status === "COMPLETED"
+      ? await getReviewForRequest(params.id)
+      : null;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -128,6 +135,11 @@ export default async function Page({ params }: { params: { id: string } }) {
             }
             contactUnlocked={workflow.conversation?.contactUnlocked ?? false}
             disputeReason={workflow.dispute?.reason ?? null}
+            existingReview={
+              existingReview
+                ? { rating: existingReview.rating, comment: existingReview.comment }
+                : null
+            }
           />
 
           {conversationId ? (

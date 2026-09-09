@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck, Loader2, CheckCircle2, AlertTriangle, Clock, Wallet,
-  FileText, Phone, Mail, Lock, PartyPopper, Gavel,
+  FileText, Phone, Mail, Lock, PartyPopper, Gavel, Star, Send,
 } from "lucide-react";
-import { formatTRY } from "@/lib/utils";
+import { cn, formatTRY } from "@/lib/utils";
+
+type ExistingReview = { rating: number; comment: string | null } | null;
 
 type Delivery = {
   note: string | null;
@@ -32,6 +34,7 @@ export function EscrowWorkflow({
   provider,
   contactUnlocked,
   disputeReason,
+  existingReview,
 }: {
   requestId: string;
   status: string;
@@ -42,6 +45,7 @@ export function EscrowWorkflow({
   provider: Contact | null;
   contactUnlocked: boolean;
   disputeReason: string | null;
+  existingReview?: ExistingReview;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -241,14 +245,24 @@ export function EscrowWorkflow({
       )}
 
       {status === "COMPLETED" && (
-        <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
-          <PartyPopper className="mt-0.5 h-5 w-5 shrink-0" />
-          <div>
-            <p className="font-semibold">İş tamamlandı ve ödeme aktarıldı.</p>
-            <p className="mt-1 text-emerald-700">
-              Hizmet verene teşekkür etmeyi ve değerlendirme bırakmayı unutma.
-            </p>
+        <div className="space-y-4">
+          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
+            <PartyPopper className="mt-0.5 h-5 w-5 shrink-0" />
+            <div>
+              <p className="font-semibold">İş tamamlandı ve ödeme aktarıldı.</p>
+              <p className="mt-1 text-emerald-700">
+                {existingReview
+                  ? "Değerlendirmen için teşekkürler!"
+                  : "Hizmet vereni değerlendirerek diğer kullanıcılara yardımcı ol."}
+              </p>
+            </div>
           </div>
+
+          <ReviewBox
+            requestId={requestId}
+            providerName={provider?.fullName ?? "Hizmet veren"}
+            existingReview={existingReview ?? null}
+          />
         </div>
       )}
 
@@ -317,6 +331,135 @@ function DisputeSection({
           Vazgeç
         </button>
       </div>
+    </div>
+  );
+}
+
+function ReviewBox({
+  requestId,
+  providerName,
+  existingReview,
+}: {
+  requestId: string;
+  providerName: string;
+  existingReview: ExistingReview;
+}) {
+  const router = useRouter();
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Zaten değerlendirilmişse, salt-okunur göster.
+  if (existingReview) {
+    return (
+      <div className="rounded-xl border border-navy-100 p-4">
+        <p className="mb-2 text-sm font-semibold text-navy-900">Değerlendirmen</p>
+        <Stars value={existingReview.rating} />
+        {existingReview.comment && (
+          <p className="mt-2 whitespace-pre-line text-sm text-navy-600">
+            {existingReview.comment}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  async function submit() {
+    if (rating < 1) {
+      setError("Lütfen bir puan seç.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/service-requests/${requestId}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment: comment || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Değerlendirme gönderilemedi.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Sunucuya ulaşılamadı.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-gold-200 bg-gold-50/50 p-4">
+      <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-navy-900">
+        <Star className="h-4 w-4 text-gold-500" /> {providerName} için değerlendirme
+      </p>
+
+      {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+
+      <div className="mb-3 flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onMouseEnter={() => setHover(n)}
+            onMouseLeave={() => setHover(0)}
+            onClick={() => setRating(n)}
+            className="p-0.5"
+            aria-label={`${n} yıldız`}
+          >
+            <Star
+              className={cn(
+                "h-7 w-7 transition-colors",
+                (hover || rating) >= n
+                  ? "fill-gold-400 text-gold-400"
+                  : "text-navy-200",
+              )}
+            />
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        rows={3}
+        className="input resize-none"
+        placeholder="Deneyimini birkaç cümleyle anlat (opsiyonel)..."
+      />
+
+      <button
+        onClick={submit}
+        disabled={loading}
+        className="btn-primary mt-3 w-full text-sm"
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            <Send className="h-4 w-4" /> Değerlendirmeyi gönder
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
+function Stars({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={cn(
+            "h-5 w-5",
+            value >= n ? "fill-gold-400 text-gold-400" : "text-navy-200",
+          )}
+        />
+      ))}
     </div>
   );
 }
