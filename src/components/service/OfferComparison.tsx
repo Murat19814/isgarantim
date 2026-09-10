@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Star, ShieldCheck, CheckCircle2, Clock, Loader2, Trophy, MessageSquare,
-  Package, Search, CalendarClock,
+  Package, Search, CalendarClock, Mic, Video, Briefcase, Timer,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { VerificationBadges } from "@/components/VerificationBadges";
@@ -18,6 +18,9 @@ type Offer = {
   availability: string | null;
   materialsIncluded: boolean | null;
   onSiteInspection: boolean | null;
+  voiceNote: string | null;
+  videoUrl: string | null;
+  portfolio: string[];
   status: string;
   provider: {
     id: string;
@@ -33,6 +36,8 @@ type Offer = {
       skillVerified: boolean;
       avgResponseMin: number | null;
       headline: string | null;
+      experienceYears: number | null;
+      city: string | null;
     } | null;
   };
 };
@@ -171,6 +176,16 @@ export function OfferComparison({
                   value={o.estimatedDuration ?? "—"}
                 />
                 <Stat
+                  icon={<Briefcase className="h-4 w-4 text-navy-400" />}
+                  label="Deneyim"
+                  value={p?.experienceYears ? `${p.experienceYears} yıl` : "—"}
+                />
+                <Stat
+                  icon={<Timer className="h-4 w-4 text-navy-400" />}
+                  label="Yanıt süresi"
+                  value={p?.avgResponseMin ? `~${p.avgResponseMin} dk` : "—"}
+                />
+                <Stat
                   icon={<ShieldCheck className="h-4 w-4 text-emerald-500" />}
                   label="Doğrulama"
                   value={
@@ -209,6 +224,38 @@ export function OfferComparison({
                   <MessageSquare className="h-4 w-4 shrink-0 text-navy-400" />
                   {o.message}
                 </p>
+              )}
+
+              {/* Hizmet verenin tanıtımı: ses / video / önceki işler */}
+              {(o.voiceNote || o.videoUrl || (o.portfolio && o.portfolio.length > 0)) && (
+                <div className="mt-3 space-y-2">
+                  {o.voiceNote && (
+                    <div className="flex items-center gap-2">
+                      <Mic className="h-4 w-4 shrink-0 text-emerald-600" />
+                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                      <audio src={o.voiceNote} controls className="h-8 w-full max-w-[260px]" />
+                    </div>
+                  )}
+                  {o.videoUrl && (
+                    <div>
+                      <p className="mb-1 flex items-center gap-1 text-xs font-medium text-navy-500">
+                        <Video className="h-3.5 w-3.5" /> Tanıtım videosu
+                      </p>
+                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                      <video src={o.videoUrl} controls className="w-full rounded-xl border border-navy-100" />
+                    </div>
+                  )}
+                  {o.portfolio && o.portfolio.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                      {o.portfolio.map((src, i) => (
+                        <a key={i} href={src} target="_blank" rel="noreferrer" className="overflow-hidden rounded-lg border border-navy-100">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={src} alt="" className="h-14 w-full object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
 
               {selectable && (

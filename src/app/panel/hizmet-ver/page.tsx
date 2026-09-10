@@ -51,6 +51,9 @@ export default async function Page() {
       availability: true,
       materialsIncluded: true,
       onSiteInspection: true,
+      voiceNote: true,
+      videoUrl: true,
+      portfolio: true,
       status: true,
     },
   });
@@ -79,6 +82,9 @@ export default async function Page() {
               availability: mine.availability ?? "",
               materialsIncluded: mine.materialsIncluded ?? false,
               onSiteInspection: mine.onSiteInspection ?? false,
+              voiceNote: mine.voiceNote,
+              videoUrl: mine.videoUrl,
+              portfolio: mine.portfolio,
               status: mine.status as string,
             }
           : null,

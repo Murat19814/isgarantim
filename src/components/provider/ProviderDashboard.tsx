@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck, UserCog, Target } from "lucide-react";
+import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck, UserCog, Target, Mic, Video, ImagePlus } from "lucide-react";
 import { formatTRY } from "@/lib/utils";
 import { MAX_OFFERS_PER_REQUEST } from "@/lib/constants";
+import { FileUpload } from "@/components/ui/FileUpload";
 
 type MyOffer = {
   price: number;
@@ -14,6 +15,9 @@ type MyOffer = {
   availability: string;
   materialsIncluded: boolean;
   onSiteInspection: boolean;
+  voiceNote?: string | null;
+  videoUrl?: string | null;
+  portfolio?: string[];
   status: string;
 };
 
@@ -170,6 +174,9 @@ function OfferForm({
   const [availability, setAvailability] = useState(existing?.availability ?? "");
   const [materials, setMaterials] = useState(existing?.materialsIncluded ?? false);
   const [inspection, setInspection] = useState(existing?.onSiteInspection ?? false);
+  const [voiceNote, setVoiceNote] = useState(existing?.voiceNote ?? "");
+  const [videoUrl, setVideoUrl] = useState(existing?.videoUrl ?? "");
+  const [portfolio, setPortfolio] = useState<string[]>(existing?.portfolio ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -187,6 +194,9 @@ function OfferForm({
           availability: availability || undefined,
           materialsIncluded: materials,
           onSiteInspection: inspection,
+          voiceNote: voiceNote || undefined,
+          videoUrl: videoUrl || undefined,
+          portfolio,
         }),
       });
       const data = await res.json();
@@ -235,6 +245,56 @@ function OfferForm({
         <label className="mb-1 block text-xs font-medium text-navy-700">Açıklama (opsiyonel)</label>
         <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} className="input resize-none" placeholder="Deneyimini ve işe yaklaşımını kısaca yaz..." />
       </div>
+
+      {/* Kendini tanıt: ses / video / önceki işler (opsiyonel) */}
+      <div className="mt-3 space-y-3 border-t border-navy-100 pt-3">
+        <p className="text-xs font-semibold text-navy-500">Kendini tanıt (opsiyonel) — teklifini öne çıkarır</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 flex items-center gap-1 text-xs font-medium text-navy-700"><Mic className="h-3.5 w-3.5" /> Sesli açıklama</label>
+            {voiceNote ? (
+              <div className="flex items-center gap-2">
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <audio src={voiceNote} controls className="h-8 max-w-[180px]" />
+                <button type="button" onClick={() => setVoiceNote("")} className="text-xs text-navy-400 hover:text-red-600">Sil</button>
+              </div>
+            ) : (
+              <FileUpload accept="audio/*" label="Ses yükle" onUploaded={(url) => setVoiceNote(url)} />
+            )}
+          </div>
+          <div>
+            <label className="mb-1 flex items-center gap-1 text-xs font-medium text-navy-700"><Video className="h-3.5 w-3.5" /> Tanıtım videosu</label>
+            {videoUrl ? (
+              <div className="flex items-center gap-2">
+                <a href={videoUrl} target="_blank" rel="noreferrer" className="text-xs text-emerald-600 hover:underline">Video eklendi</a>
+                <button type="button" onClick={() => setVideoUrl("")} className="text-xs text-navy-400 hover:text-red-600">Sil</button>
+              </div>
+            ) : (
+              <FileUpload accept="video/*" label="Video yükle" onUploaded={(url) => setVideoUrl(url)} />
+            )}
+          </div>
+        </div>
+        <div>
+          <label className="mb-1 flex items-center gap-1 text-xs font-medium text-navy-700"><ImagePlus className="h-3.5 w-3.5" /> Önceki işlerinden görseller (en fazla 6)</label>
+          <FileUpload accept="image/*" label="Görsel yükle" disabled={portfolio.length >= 6}
+            onUploaded={(url) => setPortfolio((p) => (p.length >= 6 ? p : [...p, url]))} />
+          {portfolio.length > 0 && (
+            <div className="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {portfolio.map((src, i) => (
+                <div key={i} className="group relative overflow-hidden rounded-lg border border-navy-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="h-14 w-full object-cover" />
+                  <button type="button" onClick={() => setPortfolio((ps) => ps.filter((_, j) => j !== i))}
+                    className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-black/60 text-white">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <button onClick={submit} disabled={loading || !price || !duration} className="btn-primary mt-3 w-full">
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         {existing ? "Teklifi güncelle" : "Teklifi gönder (ücretsiz)"}

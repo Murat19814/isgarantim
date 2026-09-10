@@ -459,6 +459,9 @@ model Offer {
   availability      String? // Müsaitlik (ör. "Yarın 14:00", "Hafta içi")
   materialsIncluded Boolean? // Malzeme fiyata dahil mi
   onSiteInspection  Boolean? // Yerinde keşif gerekli mi
+  voiceNote         String? // Sesli açıklama (URL)
+  videoUrl          String? // Kısa tanıtım videosu (URL)
+  portfolio         String[] // Önceki işlerden görseller
   creditCost        Int           @default(0) // 1. yıl ücretsiz — kontör kapalı
   status            OfferStatus   @default(PENDING)
   createdAt         DateTime      @default(now())

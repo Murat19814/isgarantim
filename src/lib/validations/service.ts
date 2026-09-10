@@ -34,6 +34,9 @@ export const offerSchema = z.object({
   availability: z.string().max(120).optional(),
   materialsIncluded: z.boolean().optional(),
   onSiteInspection: z.boolean().optional(),
+  voiceNote: mediaUrl.optional().or(z.literal("").transform(() => undefined)),
+  videoUrl: mediaUrl.optional().or(z.literal("").transform(() => undefined)),
+  portfolio: z.array(mediaUrl).max(6, "En fazla 6 görsel.").default([]),
 });
 
 export type OfferInput = z.infer<typeof offerSchema>;

@@ -200,6 +200,8 @@ export async function getRequestWithOffers(requestId: string) {
                   skillVerified: true,
                   avgResponseMin: true,
                   headline: true,
+                  experienceYears: true,
+                  city: true,
                 },
               },
             },

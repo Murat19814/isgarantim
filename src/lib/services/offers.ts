@@ -71,6 +71,9 @@ export async function createOffer(
       availability: input.availability,
       materialsIncluded: input.materialsIncluded,
       onSiteInspection: input.onSiteInspection,
+      voiceNote: input.voiceNote,
+      videoUrl: input.videoUrl,
+      portfolio: input.portfolio ?? [],
       creditCost: 0,
       status: OfferStatus.PENDING,
     },
@@ -116,6 +119,9 @@ export async function updateOffer(
       availability: input.availability,
       materialsIncluded: input.materialsIncluded,
       onSiteInspection: input.onSiteInspection,
+      voiceNote: input.voiceNote,
+      videoUrl: input.videoUrl,
+      portfolio: input.portfolio ?? [],
     },
   });
 
