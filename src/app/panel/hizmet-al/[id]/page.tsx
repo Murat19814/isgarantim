@@ -7,10 +7,13 @@ import {
   getRequestWorkflow,
 } from "@/lib/services/serviceRequests";
 import { getReviewForRequest } from "@/lib/services/reviews";
+import { getAgreement } from "@/lib/services/agreements";
 import { getOrCreateConversationForRequest } from "@/lib/services/messaging";
 import { formatTRY } from "@/lib/utils";
 import { OfferComparison } from "@/components/service/OfferComparison";
 import { RequestWorkflow } from "@/components/service/RequestWorkflow";
+import { WorkAgreementPanel } from "@/components/service/WorkAgreementPanel";
+import { BeforeAfterPhotos } from "@/components/service/BeforeAfterPhotos";
 import { ChatBox } from "@/components/messaging/ChatBox";
 import { URGENCY_LABELS, LOCATION_LABELS, CONTACT_LABELS } from "@/lib/requestMeta";
 
@@ -45,6 +48,22 @@ export default async function Page({ params }: { params: { id: string } }) {
     workflow?.status === "COMPLETED"
       ? await getReviewForRequest(params.id)
       : null;
+
+  const agreementRaw = workflow?.payment ? await getAgreement(params.id) : null;
+  const agreement = agreementRaw
+    ? {
+        scope: agreementRaw.scope,
+        price: agreementRaw.price,
+        materialsIncluded: agreementRaw.materialsIncluded,
+        startDate: agreementRaw.startDate?.toISOString() ?? null,
+        endDate: agreementRaw.endDate?.toISOString() ?? null,
+        cancellationTerms: agreementRaw.cancellationTerms,
+        customerNote: agreementRaw.customerNote,
+        providerNote: agreementRaw.providerNote,
+        customerApproved: agreementRaw.customerApproved,
+        providerApproved: agreementRaw.providerApproved,
+      }
+    : null;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -173,6 +192,28 @@ export default async function Page({ params }: { params: { id: string } }) {
               Mesajlaşma teklif seçildikten sonra açılır.
             </div>
           )}
+        </div>
+      )}
+
+      {workflow && workflow.payment && (
+        <div className="mt-6">
+          <WorkAgreementPanel
+            requestId={request.id}
+            role="customer"
+            defaultPrice={workflow.agreedPrice ?? workflow.payment.amount}
+            agreement={agreement}
+          />
+        </div>
+      )}
+
+      {(request.beforePhotos?.length > 0 || request.afterPhotos?.length > 0) && (
+        <div className="mt-6">
+          <BeforeAfterPhotos
+            requestId={request.id}
+            before={request.beforePhotos ?? []}
+            after={request.afterPhotos ?? []}
+            editable={false}
+          />
         </div>
       )}
 

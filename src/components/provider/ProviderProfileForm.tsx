@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, X, Plus, ImagePlus } from "lucide-react";
+import { Loader2, X, Plus, ImagePlus, CalendarDays, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
+import { WEEKDAYS } from "@/lib/validations/profile";
 
 type Category = { id: string; name: string };
 type Initial = {
@@ -18,6 +19,10 @@ type Initial = {
   serviceAreas: string[];
   portfolio: string[];
   categoryIds: string[];
+  workDays: string[];
+  workStart: string;
+  workEnd: string;
+  sameDayAvailable: boolean;
 };
 
 export function ProviderProfileForm({
@@ -41,6 +46,10 @@ export function ProviderProfileForm({
   const [areaInput, setAreaInput] = useState("");
   const [portfolio, setPortfolio] = useState<string[]>(initial?.portfolio ?? []);
   const [categoryIds, setCategoryIds] = useState<string[]>(initial?.categoryIds ?? []);
+  const [workDays, setWorkDays] = useState<string[]>(initial?.workDays ?? []);
+  const [workStart, setWorkStart] = useState(initial?.workStart ?? "");
+  const [workEnd, setWorkEnd] = useState(initial?.workEnd ?? "");
+  const [sameDayAvailable, setSameDayAvailable] = useState(initial?.sameDayAvailable ?? false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -74,6 +83,10 @@ export function ProviderProfileForm({
           serviceAreas,
           portfolio,
           categoryIds,
+          workDays,
+          workStart: workStart || undefined,
+          workEnd: workEnd || undefined,
+          sameDayAvailable,
         }),
       });
       const data = await res.json();
@@ -149,6 +162,40 @@ export function ProviderProfileForm({
             ))}
           </div>
         )}
+      </div>
+
+      {/* Müsaitlik takvimi */}
+      <div className="rounded-xl border border-navy-100 bg-navy-50/40 p-4">
+        <label className="mb-2 flex items-center gap-2 text-sm font-medium text-navy-800">
+          <CalendarDays className="h-4 w-4 text-emerald-600" /> Çalışma günlerin & saatlerin
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {WEEKDAYS.map((d) => (
+            <button key={d.key} type="button"
+              onClick={() => setWorkDays((w) => w.includes(d.key) ? w.filter((x) => x !== d.key) : [...w, d.key])}
+              className={cn("rounded-lg border px-3 py-1.5 text-sm transition-colors",
+                workDays.includes(d.key)
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                  : "border-navy-200 text-navy-600 hover:border-navy-300")}>
+              {d.label}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block text-xs text-navy-500">Başlangıç</label>
+            <input type="time" value={workStart} onChange={(e) => setWorkStart(e.target.value)} className="input" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-navy-500">Bitiş</label>
+            <input type="time" value={workEnd} onChange={(e) => setWorkEnd(e.target.value)} className="input" />
+          </div>
+        </div>
+        <label className="mt-3 inline-flex items-center gap-2 text-sm text-navy-700">
+          <input type="checkbox" checked={sameDayAvailable} onChange={(e) => setSameDayAvailable(e.target.checked)}
+            className="h-4 w-4 rounded border-navy-300 text-emerald-600" />
+          <Zap className="h-4 w-4 text-gold-500" /> Aynı gün hizmet verebilirim
+        </label>
       </div>
 
       {/* Kategoriler */}

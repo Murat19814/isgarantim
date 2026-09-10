@@ -54,6 +54,10 @@ export default async function Page() {
                 serviceAreas: profile.serviceAreas ?? [],
                 portfolio: profile.portfolio ?? [],
                 categoryIds: profile.categories.map((c) => c.id),
+                workDays: profile.workDays ?? [],
+                workStart: profile.workStart ?? "",
+                workEnd: profile.workEnd ?? "",
+                sameDayAvailable: profile.sameDayAvailable ?? false,
               }
             : null
         }

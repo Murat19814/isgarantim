@@ -256,6 +256,11 @@ model ProviderProfile {
   serviceAreas   String[] // Hizmet verdiği bölgeler (il/ilçe)
   experienceYears Int? // Deneyim (yıl)
   availabilityNote String? // Müsaitlik açıklaması (ör. "Hafta içi 09-18")
+  workDays       String[] // Çalışılan günler: MON,TUE,WED,THU,FRI,SAT,SUN
+  workStart      String? // Çalışma başlangıç saati "09:00"
+  workEnd        String? // Çalışma bitiş saati "18:00"
+  sameDayAvailable Boolean @default(false) // Aynı gün hizmet verir mi
+  daysOff        String[] // Kapalı/tatil tarihleri (YYYY-MM-DD)
   categories     ServiceCategory[] @relation("ProviderCategories")
   identityVerified Boolean @default(false) // Kimlik doğrulama
   skillVerified  Boolean  @default(false) // Beceri/ustalık doğrulama
@@ -393,18 +398,46 @@ model ServiceRequest {
   agreedPrice Int? // Taraflarca kabul edilen tutar (raporlama)
   startedAt   DateTime? // İş başlangıç zamanı
   completedAt DateTime? // Müşteri onay zamanı
+  beforePhotos String[] // İş öncesi fotoğraflar
+  afterPhotos  String[] // İş sonrası fotoğraflar
   offers      Offer[]
   payment     Payment?
   conversation Conversation?
   dispute     Dispute?
   review      Review?
   problems    ProblemReport[]
+  agreement   WorkAgreement?
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
   @@index([categoryId])
   @@index([city])
   @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// DİJİTAL İŞ ANLAŞMASI (ödeme tahsilatı olmadan taraflar mutabık kalır)
+// ─────────────────────────────────────────────
+
+model WorkAgreement {
+  id                String   @id @default(cuid())
+  serviceRequestId  String   @unique
+  serviceRequest    ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  scope             String // Yapılacak işin kapsamı
+  price             Int // Kararlaştırılan fiyat (TL)
+  materialsIncluded Boolean  @default(false)
+  startDate         DateTime?
+  endDate           DateTime?
+  cancellationTerms String? // İptal şartları
+  customerNote      String?
+  providerNote      String?
+  customerApproved  Boolean  @default(false)
+  providerApproved  Boolean  @default(false)
+  customerApprovedAt DateTime?
+  providerApprovedAt DateTime?
+  createdById       String // Anlaşmayı oluşturan (taslak)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 // ─────────────────────────────────────────────

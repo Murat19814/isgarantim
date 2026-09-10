@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import {
-  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock, Award,
+  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock, Award, Zap,
 } from "lucide-react";
+import { WEEKDAYS } from "@/lib/validations/profile";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { VerificationBadges } from "@/components/VerificationBadges";
@@ -189,7 +190,25 @@ export default async function Page({ params }: { params: { id: string } }) {
                     <CalendarClock className="h-4 w-4 text-emerald-600" /> {p.availabilityNote}
                   </li>
                 )}
+                {(p.workStart || p.workEnd) && (
+                  <li className="flex items-center gap-2">
+                    <CalendarClock className="h-4 w-4 text-emerald-600" />
+                    Çalışma saatleri: {p.workStart || "?"}–{p.workEnd || "?"}
+                  </li>
+                )}
+                {p.sameDayAvailable && (
+                  <li className="flex items-center gap-2 font-medium text-red-600">
+                    <Zap className="h-4 w-4" /> Aynı gün hizmet verir
+                  </li>
+                )}
               </ul>
+              {p.workDays && p.workDays.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {WEEKDAYS.filter((d) => p.workDays.includes(d.key)).map((d) => (
+                    <span key={d.key} className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">{d.label}</span>
+                  ))}
+                </div>
+              )}
 
               {p.categories.length > 0 && (
                 <div className="mt-4">

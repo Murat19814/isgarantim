@@ -2,6 +2,35 @@ import { ServiceRequestStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { ServiceRequestInput } from "@/lib/validations/service";
 
+export class WorkPhotoError extends Error {}
+
+/**
+ * Kazanan hizmet veren, iş öncesi/sonrası fotoğraflarını kaydeder.
+ * Yalnızca işi kazanan hizmet veren güncelleyebilir.
+ */
+export async function setWorkPhotos(
+  providerId: string,
+  requestId: string,
+  input: { beforePhotos?: string[]; afterPhotos?: string[] },
+) {
+  const request = await prisma.serviceRequest.findUnique({
+    where: { id: requestId },
+    select: { id: true, payment: { select: { providerId: true } } },
+  });
+  if (!request) throw new WorkPhotoError("Talep bulunamadı.");
+  if (request.payment?.providerId !== providerId)
+    throw new WorkPhotoError("Bu işe fotoğraf ekleyemezsin.");
+
+  return prisma.serviceRequest.update({
+    where: { id: requestId },
+    data: {
+      ...(input.beforePhotos ? { beforePhotos: input.beforePhotos.slice(0, 8) } : {}),
+      ...(input.afterPhotos ? { afterPhotos: input.afterPhotos.slice(0, 8) } : {}),
+    },
+    select: { beforePhotos: true, afterPhotos: true },
+  });
+}
+
 /** Müşteri yeni hizmet talebi oluşturur. */
 export async function createServiceRequest(
   customerId: string,
@@ -158,6 +187,8 @@ export async function getRequestForProvider(
       photos: true,
       videos: true,
       voiceNote: true,
+      beforePhotos: true,
+      afterPhotos: true,
       urgency: true,
       locationType: true,
       contactPreference: true,

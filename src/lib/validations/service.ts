@@ -41,6 +41,19 @@ export const offerSchema = z.object({
 
 export type OfferInput = z.infer<typeof offerSchema>;
 
+export const agreementSchema = z.object({
+  scope: z.string().min(10, "İş kapsamını biraz daha ayrıntılı yaz.").max(2000),
+  price: z.number().int().positive("Geçerli bir fiyat gir."),
+  materialsIncluded: z.boolean().default(false),
+  startDate: z.string().datetime().optional().or(z.literal("").transform(() => undefined)),
+  endDate: z.string().datetime().optional().or(z.literal("").transform(() => undefined)),
+  cancellationTerms: z.string().max(1000).optional(),
+  customerNote: z.string().max(1000).optional(),
+  providerNote: z.string().max(1000).optional(),
+});
+
+export type AgreementInput = z.infer<typeof agreementSchema>;
+
 export const purchaseCreditsSchema = z.object({
   amount: z
     .number()

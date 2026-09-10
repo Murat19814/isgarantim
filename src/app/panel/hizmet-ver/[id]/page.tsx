@@ -8,7 +8,10 @@ import {
 } from "@/lib/services/serviceRequests";
 import { getOrCreateConversationForRequest } from "@/lib/services/messaging";
 import { getReviewForRequest } from "@/lib/services/reviews";
+import { getAgreement } from "@/lib/services/agreements";
 import { ProviderWorkflow } from "@/components/provider/ProviderWorkflow";
+import { WorkAgreementPanel } from "@/components/service/WorkAgreementPanel";
+import { BeforeAfterPhotos } from "@/components/service/BeforeAfterPhotos";
 import { URGENCY_LABELS, LOCATION_LABELS } from "@/lib/requestMeta";
 import { ChatBox } from "@/components/messaging/ChatBox";
 
@@ -35,6 +38,22 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   const review =
     workflow.status === "COMPLETED" ? await getReviewForRequest(params.id) : null;
+
+  const agreementRaw = await getAgreement(params.id);
+  const agreement = agreementRaw
+    ? {
+        scope: agreementRaw.scope,
+        price: agreementRaw.price,
+        materialsIncluded: agreementRaw.materialsIncluded,
+        startDate: agreementRaw.startDate?.toISOString() ?? null,
+        endDate: agreementRaw.endDate?.toISOString() ?? null,
+        cancellationTerms: agreementRaw.cancellationTerms,
+        customerNote: agreementRaw.customerNote,
+        providerNote: agreementRaw.providerNote,
+        customerApproved: agreementRaw.customerApproved,
+        providerApproved: agreementRaw.providerApproved,
+      }
+    : null;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -148,6 +167,26 @@ export default async function Page({ params }: { params: { id: string } }) {
           </div>
         )}
       </div>
+
+      <div className="mt-6">
+        <WorkAgreementPanel
+          requestId={request.id}
+          role="provider"
+          defaultPrice={workflow.agreedPrice ?? workflow.payment.amount}
+          agreement={agreement}
+        />
+      </div>
+
+      {["IN_PROGRESS", "DELIVERED", "COMPLETED"].includes(workflow.status) && (
+        <div className="mt-6">
+          <BeforeAfterPhotos
+            requestId={request.id}
+            before={request.beforePhotos ?? []}
+            after={request.afterPhotos ?? []}
+            editable
+          />
+        </div>
+      )}
     </div>
   );
 }

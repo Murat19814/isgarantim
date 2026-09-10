@@ -28,6 +28,10 @@ export async function upsertProviderProfile(
     availabilityNote: input.availabilityNote || null,
     serviceAreas: input.serviceAreas,
     portfolio: input.portfolio,
+    workDays: input.workDays,
+    workStart: input.workStart || null,
+    workEnd: input.workEnd || null,
+    sameDayAvailable: input.sameDayAvailable,
   };
 
   return prisma.providerProfile.upsert({
@@ -62,6 +66,10 @@ export async function getPublicProviderProfile(userId: string) {
       serviceAreas: true,
       experienceYears: true,
       availabilityNote: true,
+      workDays: true,
+      workStart: true,
+      workEnd: true,
+      sameDayAvailable: true,
       ratingAvg: true,
       ratingCount: true,
       completedJobs: true,
@@ -89,6 +97,47 @@ export async function getPublicProviderProfile(userId: string) {
   ]);
 
   return { profile, badges, reviews, repeatRate, criteriaAvg: criteriaAgg._avg };
+}
+
+const WEEKDAY_KEYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+/**
+ * Bugün müsait (aynı gün hizmet veren) profilleri listeler.
+ * sameDayAvailable=true, bugün çalışma gününde ve tatil değilse.
+ */
+export async function listSameDayProviders(opts?: { city?: string; take?: number }) {
+  const now = new Date();
+  const todayKey = WEEKDAY_KEYS[now.getDay()];
+  const todayStr = now.toISOString().slice(0, 10);
+
+  const profiles = await prisma.providerProfile.findMany({
+    where: {
+      sameDayAvailable: true,
+      ...(opts?.city ? { city: opts.city } : {}),
+      user: { isActive: true, isBanned: false },
+    },
+    orderBy: [{ ratingAvg: "desc" }, { completedJobs: "desc" }],
+    take: (opts?.take ?? 8) * 2,
+    select: {
+      headline: true,
+      city: true,
+      ratingAvg: true,
+      ratingCount: true,
+      completedJobs: true,
+      avgResponseMin: true,
+      workDays: true,
+      daysOff: true,
+      user: { select: { id: true, fullName: true, avatarUrl: true, isFounder: true } },
+    },
+  });
+
+  const available = profiles.filter((p) => {
+    if (p.daysOff.includes(todayStr)) return false;
+    if (p.workDays.length > 0 && !p.workDays.includes(todayKey)) return false;
+    return true;
+  });
+
+  return available.slice(0, opts?.take ?? 8);
 }
 
 /** Tekrar tercih edilme oranı: birden fazla iş veren müşterilerin oranı. */
