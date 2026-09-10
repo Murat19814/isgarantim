@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Star, ShieldCheck, CheckCircle2, Clock, Loader2, Trophy, MessageSquare,
@@ -122,7 +123,13 @@ export function OfferComparison({
                   </span>
                   <div>
                     <div className="flex items-center gap-1">
-                      <p className="font-semibold text-navy-900">{o.provider.fullName}</p>
+                      <Link
+                        href={`/hizmet-veren/${o.provider.id}`}
+                        target="_blank"
+                        className="font-semibold text-navy-900 hover:text-emerald-700 hover:underline"
+                      >
+                        {o.provider.fullName}
+                      </Link>
                       {p?.identityVerified && (
                         <ShieldCheck className="h-4 w-4 text-emerald-600" />
                       )}

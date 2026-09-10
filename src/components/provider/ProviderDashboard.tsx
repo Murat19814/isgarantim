@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck, UserCog } from "lucide-react";
 import { formatTRY } from "@/lib/utils";
 import { MAX_OFFERS_PER_REQUEST } from "@/lib/constants";
 
@@ -43,12 +43,20 @@ export function ProviderDashboard({ requests }: { requests: OpenRequest[] }) {
           <p className="mt-1 text-sm text-emerald-50">
             Kontör yok, komisyon yok, teklif ücreti yok. Talebe teklifini ver, işi al, kazancın senin olsun.
           </p>
-          <Link
-            href="/panel/dogrulama"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/25"
-          >
-            <ShieldCheck className="h-4 w-4 text-gold-300" /> Profilini doğrula, rozet kazan
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/panel/dogrulama"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/25"
+            >
+              <ShieldCheck className="h-4 w-4 text-gold-300" /> Profilini doğrula, rozet kazan
+            </Link>
+            <Link
+              href="/panel/hizmet-ver/profil"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/25"
+            >
+              <UserCog className="h-4 w-4 text-gold-300" /> Profilimi düzenle
+            </Link>
+          </div>
         </div>
       </div>
 

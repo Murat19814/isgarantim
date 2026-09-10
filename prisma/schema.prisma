@@ -194,6 +194,11 @@ model ProviderProfile {
   bio            String?
   city           String?
   district       String?
+  coverUrl       String? // Kapak görseli
+  portfolio      String[] // Portföy foto/video URL'leri
+  serviceAreas   String[] // Hizmet verdiği bölgeler (il/ilçe)
+  experienceYears Int? // Deneyim (yıl)
+  availabilityNote String? // Müsaitlik açıklaması (ör. "Hafta içi 09-18")
   categories     ServiceCategory[] @relation("ProviderCategories")
   identityVerified Boolean @default(false) // Kimlik doğrulama
   skillVerified  Boolean  @default(false) // Beceri/ustalık doğrulama
