@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2,
+  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2, Wand2, Sparkles,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -156,6 +156,19 @@ export function ServiceRequestWizard({
       {/* Adım 0: Kategori */}
       {step === 0 && (
         <div className="space-y-4">
+          <AIAssist
+            onApply={(s) => {
+              if (s.categoryId && categories.some((c) => c.id === s.categoryId))
+                setCategoryId(s.categoryId);
+              if (s.subCategory) setSubCategory(s.subCategory);
+              if (s.city) setCity(s.city);
+              if (s.district) setDistrict(s.district);
+              if (s.urgency) setUrgency(s.urgency);
+              if (s.title) setTitle(s.title);
+              if (s.description) setDescription(s.description);
+            }}
+            onError={(m) => setError(m)}
+          />
           <h2 className="flex items-center gap-2 font-display text-lg font-bold text-navy-900">
             <Tag className="h-5 w-5 text-emerald-600" /> Hangi hizmete ihtiyacın var?
           </h2>
@@ -396,6 +409,18 @@ export function ServiceRequestWizard({
             </div>
           )}
 
+          {photos.length > 0 && (
+            <PhotoDetect
+              imageUrl={photos[0]}
+              onApply={(categoryId) => {
+                if (categoryId && categories.some((c) => c.id === categoryId)) {
+                  setCategoryId(categoryId);
+                }
+              }}
+              onError={(m) => setError(m)}
+            />
+          )}
+
           {/* Video (opsiyonel) */}
           <div className="border-t border-navy-100 pt-4">
             <p className="mb-2 flex items-center gap-2 text-sm font-medium text-navy-800">
@@ -500,6 +525,194 @@ export function ServiceRequestWizard({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+type AISuggestion = {
+  categoryId?: string;
+  subCategory?: string;
+  city?: string;
+  district?: string;
+  urgency?: string;
+  title?: string;
+  description?: string;
+};
+
+function AIAssist({
+  onApply,
+  onError,
+}: {
+  onApply: (s: AISuggestion) => void;
+  onError: (msg: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function run(payload: { text?: string; voiceUrl?: string }) {
+    setBusy(true);
+    setDone(false);
+    try {
+      const res = await fetch("/api/ai/parse-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onError(data.error ?? "Çözümlenemedi.");
+        return;
+      }
+      onApply(data.suggestion as AISuggestion);
+      setDone(true);
+    } catch {
+      onError("Sunucuya ulaşılamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 text-left"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white">
+          <Wand2 className="h-5 w-5" />
+        </span>
+        <span className="flex-1">
+          <span className="block font-display text-sm font-bold text-navy-900">
+            Yapay zekâ ile hızlı doldur
+          </span>
+          <span className="block text-xs text-navy-500">
+            İhtiyacını yaz ya da sesli anlat; kategori, konum ve açıklamayı biz hazırlayalım.
+          </span>
+        </span>
+        <ChevronRight className={cn("h-4 w-4 text-navy-400 transition-transform", open && "rotate-90")} />
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-2">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={3}
+            placeholder='Örn: "Darıca’da mutfak musluğum akıtıyor, bugün gelebilecek tesisatçı arıyorum."'
+            className="input resize-none"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => text.trim().length >= 10 ? run({ text }) : onError("Lütfen biraz daha ayrıntılı yaz.")}
+              disabled={busy}
+              className="btn-primary text-sm"
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {busy ? "Hazırlanıyor..." : "Formu doldur"}
+            </button>
+            <VoiceRecorder
+              value=""
+              onRecorded={(url) => run({ voiceUrl: url })}
+              onClear={() => {}}
+              onError={onError}
+            />
+            {done && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
+                <Check className="h-3.5 w-3.5" /> Alanlar dolduruldu, kontrol edip devam et.
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhotoDetect({
+  imageUrl,
+  onApply,
+  onError,
+}: {
+  imageUrl: string;
+  onApply: (categoryId?: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{
+    categoryId?: string;
+    categoryName?: string;
+    questions: string[];
+    priceMin?: number;
+    priceMax?: number;
+    summary?: string;
+  } | null>(null);
+
+  async function detect() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/ai/detect-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        onError(data.error ?? "Tespit edilemedi.");
+        return;
+      }
+      setResult(data.detection);
+      onApply(data.detection?.categoryId);
+    } catch {
+      onError("Sunucuya ulaşılamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-navy-100 bg-navy-50/50 p-4">
+      {!result ? (
+        <button type="button" onClick={detect} disabled={busy} className="btn-outline text-sm">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {busy ? "İnceleniyor..." : "Fotoğraftan tahmin et"}
+        </button>
+      ) : (
+        <div className="space-y-2 text-sm">
+          {result.summary && <p className="text-navy-700">{result.summary}</p>}
+          {result.categoryName && (
+            <p>
+              Önerilen kategori:{" "}
+              <span className="badge-emerald">{result.categoryName}</span>
+            </p>
+          )}
+          {(result.priceMin || result.priceMax) && (
+            <p className="text-navy-700">
+              Tahmini fiyat aralığı:{" "}
+              <span className="font-semibold">
+                {result.priceMin ? formatTRY(result.priceMin) : "?"} –{" "}
+                {result.priceMax ? formatTRY(result.priceMax) : "?"}
+              </span>
+            </p>
+          )}
+          {result.questions.length > 0 && (
+            <div>
+              <p className="font-medium text-navy-800">Netleştirilecek sorular:</p>
+              <ul className="ml-4 list-disc text-navy-600">
+                {result.questions.map((q, i) => (
+                  <li key={i}>{q}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <p className="rounded-lg bg-gold-50 px-3 py-2 text-xs text-navy-600">
+            ⚠️ Tahmini fiyat kesin teklif değildir; kesin fiyat için teklifleri karşılaştır.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
