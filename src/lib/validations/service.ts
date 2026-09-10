@@ -7,12 +7,17 @@ export const serviceRequestSchema = z
     subCategory: z.string().optional(),
     city: z.string().min(2, "Şehir seç."),
     district: z.string().optional(),
+    neighborhood: z.string().max(120).optional(),
     title: z.string().min(5, "Başlık en az 5 karakter olmalı.").max(120),
     description: z.string().min(20, "Açıklama en az 20 karakter olmalı.").max(4000),
     budgetMin: z.number().int().positive().optional(),
     budgetMax: z.number().int().positive().optional(),
     preferredDate: z.string().datetime().optional().or(z.literal("").transform(() => undefined)),
+    urgency: z.enum(["FLEXIBLE", "THIS_WEEK", "URGENT"]).default("FLEXIBLE"),
+    locationType: z.enum(["ONSITE", "REMOTE", "BOTH"]).default("ONSITE"),
+    contactPreference: z.enum(["PLATFORM", "PHONE", "BOTH"]).default("PLATFORM"),
     photos: z.array(mediaUrl).max(8, "En fazla 8 fotoğraf.").default([]),
+    videos: z.array(mediaUrl).max(4, "En fazla 4 video.").default([]),
   })
   .refine(
     (d) => !d.budgetMin || !d.budgetMax || d.budgetMax >= d.budgetMin,

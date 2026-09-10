@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText,
+  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
+import { URGENCY_LABELS, LOCATION_LABELS, CONTACT_LABELS } from "@/lib/requestMeta";
 
 type Category = { id: string; name: string; children: { id: string; name: string }[] };
 
@@ -28,13 +29,18 @@ export function ServiceRequestWizard({
   const [subCategory, setSubCategory] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
+  const [urgency, setUrgency] = useState("FLEXIBLE");
+  const [locationType, setLocationType] = useState("ONSITE");
+  const [contactPreference, setContactPreference] = useState("PLATFORM");
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoInput, setPhotoInput] = useState("");
+  const [videos, setVideos] = useState<string[]>([]);
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
@@ -68,6 +74,7 @@ export function ServiceRequestWizard({
       subCategory: subCategory || undefined,
       city,
       district: district || undefined,
+      neighborhood: neighborhood || undefined,
       title,
       description,
       budgetMin: budgetMin ? Number(budgetMin) : undefined,
@@ -75,7 +82,11 @@ export function ServiceRequestWizard({
       preferredDate: preferredDate
         ? new Date(preferredDate).toISOString()
         : undefined,
+      urgency,
+      locationType,
+      contactPreference,
       photos,
+      videos,
     };
     try {
       const res = await fetch("/api/service-requests", {
@@ -205,16 +216,39 @@ export function ServiceRequestWizard({
               ))}
             </select>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-navy-800">
+                İlçe (opsiyonel)
+              </label>
+              <input
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                className="input"
+                placeholder="ör. Kadıköy"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-navy-800">
+                Mahalle (opsiyonel)
+              </label>
+              <input
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+                className="input"
+                placeholder="ör. Caferağa"
+              />
+            </div>
+          </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-navy-800">
-              İlçe (opsiyonel)
+              Hizmet nerede verilecek?
             </label>
-            <input
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              className="input"
-              placeholder="ör. Kadıköy"
-            />
+            <select value={locationType} onChange={(e) => setLocationType(e.target.value)} className="input">
+              <option value="ONSITE">Yerinde (adreste)</option>
+              <option value="REMOTE">Uzaktan</option>
+              <option value="BOTH">Farketmez</option>
+            </select>
           </div>
         </div>
       )}
@@ -271,16 +305,36 @@ export function ServiceRequestWizard({
               />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-navy-800">
+                Tercih edilen tarih (opsiyonel)
+              </label>
+              <input
+                type="date"
+                value={preferredDate}
+                onChange={(e) => setPreferredDate(e.target.value)}
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-navy-800">Aciliyet</label>
+              <select value={urgency} onChange={(e) => setUrgency(e.target.value)} className="input">
+                <option value="FLEXIBLE">Esnek / planlı</option>
+                <option value="THIS_WEEK">Bu hafta</option>
+                <option value="URGENT">Acil (bugün/yarın)</option>
+              </select>
+            </div>
+          </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-navy-800">
-              Tercih edilen tarih (opsiyonel)
+              İletişim tercihi
             </label>
-            <input
-              type="date"
-              value={preferredDate}
-              onChange={(e) => setPreferredDate(e.target.value)}
-              className="input"
-            />
+            <select value={contactPreference} onChange={(e) => setContactPreference(e.target.value)} className="input">
+              <option value="PLATFORM">Uygulama içi mesaj</option>
+              <option value="PHONE">Telefon</option>
+              <option value="BOTH">İkisi de olur</option>
+            </select>
           </div>
         </div>
       )}
@@ -332,6 +386,33 @@ export function ServiceRequestWizard({
               ))}
             </div>
           )}
+
+          {/* Video (opsiyonel) */}
+          <div className="border-t border-navy-100 pt-4">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-navy-800">
+              <Video className="h-4 w-4 text-emerald-600" /> Video ekle (opsiyonel, en fazla 4)
+            </p>
+            <FileUpload
+              accept="video/*"
+              label="Cihazdan video yükle"
+              disabled={videos.length >= 4}
+              onUploaded={(url) => {
+                setVideos((v) => (v.length >= 4 ? v : [...v, url]));
+                setError(null);
+              }}
+            />
+            {videos.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {videos.map((v, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 rounded-full bg-navy-100 px-2 py-1 text-xs text-navy-600">
+                    <a href={v} target="_blank" rel="noreferrer" className="hover:text-navy-900">Video {i + 1}</a>
+                    <button type="button" onClick={() => setVideos((arr) => arr.filter((_, j) => j !== i))}
+                      className="ml-1 text-navy-400 hover:text-red-600">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -341,7 +422,7 @@ export function ServiceRequestWizard({
           <h2 className="font-display text-lg font-bold text-navy-900">Özet</h2>
           <dl className="divide-y divide-navy-100 text-sm">
             <Row label="Kategori" value={selectedCategory?.name + (subCategory ? ` · ${subCategory}` : "")} />
-            <Row label="Konum" value={`${city}${district ? ` / ${district}` : ""}`} />
+            <Row label="Konum" value={`${city}${district ? ` / ${district}` : ""}${neighborhood ? ` / ${neighborhood}` : ""}`} />
             <Row label="Başlık" value={title} />
             <Row label="Açıklama" value={description} />
             <Row
@@ -353,7 +434,11 @@ export function ServiceRequestWizard({
               }
             />
             <Row label="Tarih" value={preferredDate || "Belirtilmedi"} />
+            <Row label="Aciliyet" value={URGENCY_LABELS[urgency]} />
+            <Row label="Yer" value={LOCATION_LABELS[locationType]} />
+            <Row label="İletişim" value={CONTACT_LABELS[contactPreference]} />
             <Row label="Fotoğraf" value={`${photos.length} adet`} />
+            <Row label="Video" value={`${videos.length} adet`} />
           </dl>
         </div>
       )}

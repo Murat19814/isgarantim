@@ -12,6 +12,7 @@ import { formatTRY } from "@/lib/utils";
 import { OfferComparison } from "@/components/service/OfferComparison";
 import { RequestWorkflow } from "@/components/service/RequestWorkflow";
 import { ChatBox } from "@/components/messaging/ChatBox";
+import { URGENCY_LABELS, LOCATION_LABELS, CONTACT_LABELS } from "@/lib/requestMeta";
 
 export const metadata = { title: "Talep Detayı" };
 
@@ -65,6 +66,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           <span className="inline-flex items-center gap-1.5">
             <MapPin className="h-4 w-4" /> {request.city}
             {request.district ? ` / ${request.district}` : ""}
+            {request.neighborhood ? ` / ${request.neighborhood}` : ""}
           </span>
           {(request.budgetMin || request.budgetMax) && (
             <span className="inline-flex items-center gap-1.5">
@@ -80,6 +82,27 @@ export default async function Page({ params }: { params: { id: string } }) {
             </span>
           )}
         </div>
+
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full bg-navy-50 px-2.5 py-1 text-navy-600">
+            Aciliyet: {URGENCY_LABELS[request.urgency] ?? request.urgency}
+          </span>
+          <span className="rounded-full bg-navy-50 px-2.5 py-1 text-navy-600">
+            Yer: {LOCATION_LABELS[request.locationType] ?? request.locationType}
+          </span>
+          <span className="rounded-full bg-navy-50 px-2.5 py-1 text-navy-600">
+            İletişim: {CONTACT_LABELS[request.contactPreference] ?? request.contactPreference}
+          </span>
+        </div>
+
+        {request.videos && request.videos.length > 0 && (
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {request.videos.map((src, i) => (
+              // eslint-disable-next-line jsx-a11y/media-has-caption
+              <video key={i} src={src} controls className="w-full rounded-xl border border-navy-100" />
+            ))}
+          </div>
+        )}
 
         {request.photos.length > 0 && (
           <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">

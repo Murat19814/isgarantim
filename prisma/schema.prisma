@@ -29,6 +29,24 @@ enum VerificationChannel {
   PHONE
 }
 
+enum RequestUrgency {
+  FLEXIBLE // Esnek / planlı
+  THIS_WEEK // Bu hafta
+  URGENT // Acil (bugün/yarın)
+}
+
+enum RequestLocation {
+  ONSITE // Yerinde (adreste)
+  REMOTE // Uzaktan
+  BOTH // Farketmez
+}
+
+enum RequestContact {
+  PLATFORM // Uygulama içi mesaj
+  PHONE // Telefon
+  BOTH // İkisi de
+}
+
 enum ServiceRequestStatus {
   DRAFT // Taslak (çok adımlı form)
   OPEN // Teklif topluyor
@@ -301,6 +319,11 @@ model ServiceRequest {
   budgetMax   Int?
   preferredDate DateTime?
   photos      String[] // Yüklenen fotoğraf URL'leri
+  videos      String[] // Yüklenen video URL'leri
+  neighborhood String? // Mahalle
+  urgency     RequestUrgency  @default(FLEXIBLE)
+  locationType RequestLocation @default(ONSITE)
+  contactPreference RequestContact @default(PLATFORM)
   status      ServiceRequestStatus @default(OPEN)
   // 1. yıl emanetsiz akış alanları
   scheduledAt DateTime? // Kararlaştırılan randevu tarihi
