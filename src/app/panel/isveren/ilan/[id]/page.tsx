@@ -4,7 +4,9 @@ import { ArrowLeft, MapPin, Briefcase, Wallet, Users } from "lucide-react";
 import { auth } from "@/lib/auth/session";
 import { getMyCompany } from "@/lib/services/companies";
 import { getJobPosting, listApplicationsForPosting } from "@/lib/services/jobs";
+import { getEnabledMap } from "@/lib/services/flags";
 import { ApplicationsManager } from "@/components/employer/ApplicationsManager";
+import { HighlightControls } from "@/components/employer/HighlightControls";
 import { WORK_TYPE_LABELS } from "@/lib/constants";
 import { formatTRY } from "@/lib/utils";
 
@@ -21,7 +23,11 @@ export default async function Page({ params }: { params: { id: string } }) {
   if (!posting) notFound();
   if (!company || posting.company.id !== company.id) redirect("/panel/isveren");
 
-  const applications = await listApplicationsForPosting(session.user.id, params.id);
+  const [applications, flags] = await Promise.all([
+    listApplicationsForPosting(session.user.id, params.id),
+    getEnabledMap(["featured_jobs", "urgent_jobs"]),
+  ]);
+  const showHighlight = flags.featured_jobs || flags.urgent_jobs;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -33,7 +39,19 @@ export default async function Page({ params }: { params: { id: string } }) {
       </Link>
 
       <div className="card p-6">
-        <span className="badge-navy">{posting.category.name}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge-navy">{posting.category.name}</span>
+          {posting.isFeatured && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gold-100 px-2 py-0.5 text-xs font-semibold text-gold-700">
+              ⭐ Öne çıkan
+            </span>
+          )}
+          {posting.isUrgent && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+              Acil
+            </span>
+          )}
+        </div>
         <h1 className="mt-3 font-display text-2xl font-extrabold text-navy-900">
           {posting.title}
         </h1>
@@ -68,6 +86,18 @@ export default async function Page({ params }: { params: { id: string } }) {
           </div>
         )}
       </div>
+
+      {showHighlight && (
+        <div className="mt-6">
+          <HighlightControls
+            postingId={posting.id}
+            featured={posting.isFeatured}
+            urgent={posting.isUrgent}
+            featuredEnabled={flags.featured_jobs}
+            urgentEnabled={flags.urgent_jobs}
+          />
+        </div>
+      )}
 
       <div className="mt-8">
         <h2 className="mb-4 font-display text-xl font-bold text-navy-900">

@@ -60,7 +60,24 @@ export default async function Page({
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {postings.map((p) => (
-            <Link key={p.id} href={`/is-ara/${p.id}`} className="group card p-5 transition-all hover:-translate-y-0.5 hover:shadow-card">
+            <Link key={p.id} href={`/is-ara/${p.id}`}
+              className={p.isFeatured
+                ? "group card p-5 ring-2 ring-gold-200 transition-all hover:-translate-y-0.5 hover:shadow-card"
+                : "group card p-5 transition-all hover:-translate-y-0.5 hover:shadow-card"}>
+              {(p.isFeatured || p.isUrgent) && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {p.isFeatured && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gold-100 px-2 py-0.5 text-[11px] font-semibold text-gold-700">
+                      ⭐ Öne çıkan
+                    </span>
+                  )}
+                  {p.isUrgent && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                      Acil
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 {p.company.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element

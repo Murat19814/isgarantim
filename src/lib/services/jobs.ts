@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { JOB_PLANS } from "@/lib/constants";
 import { notify } from "@/lib/services/notifications";
 import { ensureWelcomeCredits } from "@/lib/services/companies";
+import { isEnabled } from "@/lib/services/flags";
 import type {
   JobPostingInput,
   jobFilterSchema,
@@ -86,6 +87,63 @@ export async function createJobPosting(userId: string, input: JobPostingInput) {
 }
 
 // ─────────────────────────────────────────────
+// İLAN ÖNE ÇIKARMA / ACİL (özellik bayrağına bağlı)
+// ─────────────────────────────────────────────
+
+const HIGHLIGHT_DAYS = 30;
+
+/**
+ * İşveren, ilanını öne çıkarır veya "Acil" işaretler.
+ * İLGİLİ ÖZELLİK BAYRAĞI KAPALIYSA reddedilir (1. yıl: kapalı → seçenek sunulmaz).
+ */
+export async function setPostingHighlight(
+  userId: string,
+  postingId: string,
+  opts: { featured?: boolean; urgent?: boolean },
+) {
+  const posting = await prisma.jobPosting.findUnique({
+    where: { id: postingId },
+    select: { id: true, company: { select: { ownerId: true } } },
+  });
+  if (!posting) throw new JobError("İlan bulunamadı.");
+  if (posting.company.ownerId !== userId)
+    throw new JobError("Bu ilanı düzenleyemezsin.");
+
+  const data: {
+    isFeatured?: boolean;
+    isUrgent?: boolean;
+    highlightUntil?: Date | null;
+  } = {};
+
+  if (opts.featured !== undefined) {
+    if (opts.featured && !(await isEnabled("featured_jobs")))
+      throw new JobError("Öne çıkarma özelliği şu an kullanılamıyor.");
+    data.isFeatured = opts.featured;
+  }
+  if (opts.urgent !== undefined) {
+    if (opts.urgent && !(await isEnabled("urgent_jobs")))
+      throw new JobError("Acil ilan özelliği şu an kullanılamıyor.");
+    data.isUrgent = opts.urgent;
+  }
+
+  // Herhangi biri açıldıysa süre uzat; ikisi de kapandıysa süreyi temizle.
+  const anyOn = data.isFeatured || data.isUrgent;
+  if (anyOn) {
+    const until = new Date();
+    until.setDate(until.getDate() + HIGHLIGHT_DAYS);
+    data.highlightUntil = until;
+  } else if (opts.featured === false && opts.urgent === false) {
+    data.highlightUntil = null;
+  }
+
+  return prisma.jobPosting.update({
+    where: { id: postingId },
+    data,
+    select: { id: true, isFeatured: true, isUrgent: true },
+  });
+}
+
+// ─────────────────────────────────────────────
 // İLAN LİSTELEME (herkese açık) + DETAY
 // ─────────────────────────────────────────────
 
@@ -113,7 +171,7 @@ export async function listJobPostings(
           : []),
       ],
     },
-    orderBy: { publishedAt: "desc" },
+    orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }],
     include: {
       company: { select: { name: true, logoUrl: true, city: true, verified: true } },
       category: { select: { name: true } },
