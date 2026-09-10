@@ -78,10 +78,36 @@ export const reviewSchema = z.object({
     .int()
     .min(1, "Puan 1-5 arası olmalı.")
     .max(5, "Puan 1-5 arası olmalı."),
+  qualityRating: z.number().int().min(1).max(5).optional(),
+  punctualityRating: z.number().int().min(1).max(5).optional(),
+  communicationRating: z.number().int().min(1).max(5).optional(),
+  priceRating: z.number().int().min(1).max(5).optional(),
+  cleanlinessRating: z.number().int().min(1).max(5).optional(),
   comment: z.string().max(1000, "Yorum en fazla 1000 karakter.").optional(),
 });
 
 export type ReviewInput = z.infer<typeof reviewSchema>;
+
+/** Hizmet verenin yoruma tek seferlik yanıtı. */
+export const reviewReplySchema = z.object({
+  reply: z.string().min(2, "Yanıt çok kısa.").max(1000),
+});
+export type ReviewReplyInput = z.infer<typeof reviewReplySchema>;
+
+/** Yorum şikayeti. */
+export const reviewReportSchema = z.object({
+  reason: z.string().min(5, "Şikayet nedenini yaz.").max(500),
+});
+export type ReviewReportInput = z.infer<typeof reviewReportSchema>;
+
+/** Çok kriterli değerlendirme ölçütleri (UI). */
+export const REVIEW_CRITERIA = [
+  { key: "qualityRating", label: "İş kalitesi" },
+  { key: "punctualityRating", label: "Zamanında gelme" },
+  { key: "communicationRating", label: "İletişim" },
+  { key: "priceRating", label: "Fiyat uyumu" },
+  { key: "cleanlinessRating", label: "Temizlik ve düzen" },
+] as const;
 
 /** Randevu oluşturma (müşteri, teklif seçtikten sonra). */
 export const scheduleSchema = z.object({

@@ -9,8 +9,20 @@ import {
 import { cn, formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { PROBLEM_LABELS } from "@/lib/problems";
+import { REVIEW_CRITERIA } from "@/lib/validations/service";
 
-type ExistingReview = { rating: number; comment: string | null } | null;
+type ExistingReview =
+  | {
+      rating: number;
+      comment: string | null;
+      qualityRating?: number | null;
+      punctualityRating?: number | null;
+      communicationRating?: number | null;
+      priceRating?: number | null;
+      cleanlinessRating?: number | null;
+      providerReply?: string | null;
+    }
+  | null;
 
 type Delivery = {
   note: string | null;
@@ -351,6 +363,7 @@ function ReviewBox({ requestId, providerName, existingReview }: {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
+  const [criteria, setCriteria] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -362,17 +375,35 @@ function ReviewBox({ requestId, providerName, existingReview }: {
         {existingReview.comment && (
           <p className="mt-2 whitespace-pre-line text-sm text-navy-600">{existingReview.comment}</p>
         )}
+        <div className="mt-3 grid grid-cols-1 gap-1 sm:grid-cols-2">
+          {REVIEW_CRITERIA.map((c) => {
+            const v = existingReview[c.key as keyof ExistingReview] as number | null | undefined;
+            if (!v) return null;
+            return (
+              <div key={c.key} className="flex items-center justify-between text-xs text-navy-500">
+                <span>{c.label}</span>
+                <Stars value={v} small />
+              </div>
+            );
+          })}
+        </div>
+        {existingReview.providerReply && (
+          <div className="mt-3 rounded-lg bg-navy-50 p-3 text-sm">
+            <p className="text-xs font-semibold text-navy-700">Hizmet verenin yanıtı</p>
+            <p className="mt-1 whitespace-pre-line text-navy-600">{existingReview.providerReply}</p>
+          </div>
+        )}
       </div>
     );
   }
 
   async function submit() {
-    if (rating < 1) { setError("Lütfen bir puan seç."); return; }
+    if (rating < 1) { setError("Lütfen genel puanı seç."); return; }
     setLoading(true); setError(null);
     try {
       const res = await fetch(`/api/service-requests/${requestId}/review`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating, comment: comment || undefined }),
+        body: JSON.stringify({ rating, comment: comment || undefined, ...criteria }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Değerlendirme gönderilemedi."); return; }
@@ -386,6 +417,7 @@ function ReviewBox({ requestId, providerName, existingReview }: {
         <Star className="h-4 w-4 text-gold-500" /> {providerName} için değerlendirme
       </p>
       {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+      <p className="mb-1 text-xs font-medium text-navy-600">Genel memnuniyet</p>
       <div className="mb-3 flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button" onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}
@@ -395,6 +427,26 @@ function ReviewBox({ requestId, providerName, existingReview }: {
           </button>
         ))}
       </div>
+
+      {/* Çok kriterli puanlar */}
+      <div className="mb-3 space-y-1.5">
+        {REVIEW_CRITERIA.map((c) => (
+          <div key={c.key} className="flex items-center justify-between">
+            <span className="text-xs text-navy-600">{c.label}</span>
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} type="button"
+                  onClick={() => setCriteria((p) => ({ ...p, [c.key]: n }))}
+                  className="p-0.5" aria-label={`${c.label} ${n}`}>
+                  <Star className={cn("h-4 w-4",
+                    (criteria[c.key] ?? 0) >= n ? "fill-gold-400 text-gold-400" : "text-navy-200")} />
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
       <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3}
         className="input resize-none" placeholder="Deneyimini birkaç cümleyle anlat (opsiyonel)..." />
       <button onClick={submit} disabled={loading} className="btn-primary mt-3 w-full text-sm">
@@ -404,11 +456,11 @@ function ReviewBox({ requestId, providerName, existingReview }: {
   );
 }
 
-function Stars({ value }: { value: number }) {
+function Stars({ value, small }: { value: number; small?: boolean }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} className={cn("h-5 w-5", value >= n ? "fill-gold-400 text-gold-400" : "text-navy-200")} />
+        <Star key={n} className={cn(small ? "h-3.5 w-3.5" : "h-5 w-5", value >= n ? "fill-gold-400 text-gold-400" : "text-navy-200")} />
       ))}
     </div>
   );

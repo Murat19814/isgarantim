@@ -43,11 +43,12 @@ export async function getAdminStats() {
     prisma.complaint.count({ where: { isResolved: false } }),
   ]);
 
-  const [openProblems, pendingVerifications] = await Promise.all([
+  const [openProblems, pendingVerifications, reportedReviews] = await Promise.all([
     prisma.problemReport.count({
       where: { status: { in: [ProblemStatus.OPEN, ProblemStatus.UNDER_REVIEW] } },
     }),
     prisma.verification.count({ where: { status: "PENDING" } }),
+    prisma.review.count({ where: { reported: true } }),
   ]);
 
   return {
@@ -61,6 +62,7 @@ export async function getAdminStats() {
     unresolvedComplaints,
     openProblems,
     pendingVerifications,
+    reportedReviews,
   };
 }
 

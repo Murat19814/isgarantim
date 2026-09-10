@@ -4,11 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Loader2, CheckCircle2, Clock, FileText, Phone, Mail, Lock,
-  PartyPopper, AlertTriangle, Play, Calendar, XCircle, ShieldAlert,
+  PartyPopper, AlertTriangle, Play, Calendar, XCircle, ShieldAlert, Star, MessageSquare, Send,
 } from "lucide-react";
 import { formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { PROBLEM_LABELS } from "@/lib/problems";
+
+type ReviewInfo = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  providerReply: string | null;
+} | null;
 
 type Delivery = {
   note: string | null;
@@ -25,6 +32,7 @@ export function ProviderWorkflow({
   delivery,
   customer,
   contactUnlocked,
+  review,
 }: {
   requestId: string;
   status: string;
@@ -33,6 +41,7 @@ export function ProviderWorkflow({
   delivery: Delivery;
   customer: { fullName: string; phone: string | null; email: string | null } | null;
   contactUnlocked: boolean;
+  review?: ReviewInfo;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -182,9 +191,12 @@ export function ProviderWorkflow({
       )}
 
       {status === "COMPLETED" && (
-        <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
-          <PartyPopper className="mt-0.5 h-5 w-5 shrink-0" />
-          <p className="font-semibold">Tebrikler! İş onaylandı ve tamamlandı olarak kaydedildi.</p>
+        <div className="space-y-4">
+          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
+            <PartyPopper className="mt-0.5 h-5 w-5 shrink-0" />
+            <p className="font-semibold">Tebrikler! İş onaylandı ve tamamlandı olarak kaydedildi.</p>
+          </div>
+          {review && <ProviderReviewReply review={review} />}
         </div>
       )}
 
@@ -200,6 +212,93 @@ export function ProviderWorkflow({
       {status === "CANCELLED" && (
         <div className="flex items-start gap-2 rounded-xl bg-navy-50 p-4 text-sm text-navy-600">
           <XCircle className="mt-0.5 h-5 w-5 shrink-0" /> Bu iş iptal edildi.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProviderReviewReply({ review }: { review: NonNullable<ReviewInfo> }) {
+  const router = useRouter();
+  const [reply, setReply] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+
+  async function sendReply() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reply }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Yanıt gönderilemedi."); return; }
+      router.refresh();
+    } catch { setError("Sunucuya ulaşılamadı."); } finally { setLoading(false); }
+  }
+
+  async function report() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/reviews/${review.id}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reportReason }),
+      });
+      if (res.ok) { setReporting(false); router.refresh(); }
+    } finally { setLoading(false); }
+  }
+
+  return (
+    <div className="rounded-xl border border-navy-100 p-4">
+      <div className="flex items-center gap-2">
+        <Star className="h-4 w-4 fill-gold-400 text-gold-400" />
+        <span className="font-semibold text-navy-900">{review.rating}/5</span>
+        <span className="text-xs text-navy-400">müşteri değerlendirmesi</span>
+      </div>
+      {review.comment && (
+        <p className="mt-2 whitespace-pre-line text-sm text-navy-600">{review.comment}</p>
+      )}
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+
+      {review.providerReply ? (
+        <div className="mt-3 rounded-lg bg-navy-50 p-3 text-sm">
+          <p className="text-xs font-semibold text-navy-700">Yanıtın</p>
+          <p className="mt-1 whitespace-pre-line text-navy-600">{review.providerReply}</p>
+        </div>
+      ) : (
+        <div className="mt-3">
+          <div className="flex items-center gap-1 text-xs font-medium text-navy-700">
+            <MessageSquare className="h-3.5 w-3.5" /> Yoruma yanıt ver (tek sefer)
+          </div>
+          <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={2}
+            className="input mt-1 resize-none" placeholder="Kibar ve profesyonel bir yanıt yaz..." />
+          <button onClick={sendReply} disabled={loading || reply.trim().length < 2}
+            className="btn-primary mt-2 text-sm">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (<><Send className="h-4 w-4" /> Yanıtla</>)}
+          </button>
+        </div>
+      )}
+
+      {/* Haksız yorum şikayeti */}
+      {!reporting ? (
+        <button onClick={() => setReporting(true)}
+          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-navy-400 hover:text-red-600">
+          <AlertTriangle className="h-3.5 w-3.5" /> Bu yorumu şikayet et
+        </button>
+      ) : (
+        <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
+          <textarea value={reportReason} onChange={(e) => setReportReason(e.target.value)} rows={2}
+            className="input resize-none" placeholder="Neden haksız/uygunsuz? (en az 5 karakter)" />
+          <div className="mt-2 flex gap-2">
+            <button onClick={report} disabled={loading || reportReason.trim().length < 5}
+              className="btn-primary text-sm">Şikayet et</button>
+            <button onClick={() => setReporting(false)} className="btn-ghost text-sm">Vazgeç</button>
+          </div>
         </div>
       )}
     </div>

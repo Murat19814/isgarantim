@@ -472,11 +472,25 @@ model Review {
   author           User           @relation("ReviewAuthor", fields: [authorId], references: [id])
   targetId         String
   target           User           @relation("ReviewTarget", fields: [targetId], references: [id])
-  rating           Int // 1-5
+  rating           Int // Genel memnuniyet (1-5) — ortalamada kullanılır
+  // Çok kriterli puanlar (1-5, opsiyonel)
+  qualityRating       Int? // İş kalitesi
+  punctualityRating   Int? // Zamanında gelme
+  communicationRating Int? // İletişim
+  priceRating         Int? // Fiyat uyumu
+  cleanlinessRating   Int? // Temizlik ve düzen
   comment          String?
+  // Hizmet verenin tek seferlik yanıtı
+  providerReply    String?
+  providerRepliedAt DateTime?
+  // Moderasyon
+  reported         Boolean        @default(false)
+  reportReason     String?
+  isHidden         Boolean        @default(false)
   createdAt        DateTime       @default(now())
 
   @@index([targetId])
+  @@index([reported])
 }
 
 model Complaint {

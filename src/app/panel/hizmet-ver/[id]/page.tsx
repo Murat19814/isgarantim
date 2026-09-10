@@ -7,6 +7,7 @@ import {
   getRequestWorkflow,
 } from "@/lib/services/serviceRequests";
 import { getOrCreateConversationForRequest } from "@/lib/services/messaging";
+import { getReviewForRequest } from "@/lib/services/reviews";
 import { ProviderWorkflow } from "@/components/provider/ProviderWorkflow";
 import { ChatBox } from "@/components/messaging/ChatBox";
 
@@ -30,6 +31,9 @@ export default async function Page({ params }: { params: { id: string } }) {
     params.id,
     session.user.id,
   ).catch(() => null);
+
+  const review =
+    workflow.status === "COMPLETED" ? await getReviewForRequest(params.id) : null;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -95,6 +99,16 @@ export default async function Page({ params }: { params: { id: string } }) {
             email: workflow.customer.email,
           }}
           contactUnlocked={workflow.conversation?.contactUnlocked ?? false}
+          review={
+            review
+              ? {
+                  id: review.id,
+                  rating: review.rating,
+                  comment: review.comment,
+                  providerReply: review.providerReply,
+                }
+              : null
+          }
         />
 
         {convo ? (

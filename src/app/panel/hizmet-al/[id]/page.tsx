@@ -129,11 +129,7 @@ export default async function Page({ params }: { params: { id: string } }) {
                 : null
             }
             contactUnlocked={workflow.conversation?.contactUnlocked ?? false}
-            existingReview={
-              existingReview
-                ? { rating: existingReview.rating, comment: existingReview.comment }
-                : null
-            }
+            existingReview={existingReview ?? null}
           />
 
           {conversationId ? (
