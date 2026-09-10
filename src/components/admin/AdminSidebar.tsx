@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ClipboardList, Wallet, Gavel,
-  Briefcase, Tags, Flag, ShieldCheck, ExternalLink,
+  Briefcase, Tags, Flag, ShieldCheck, ShieldAlert, ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ const LINKS = [
   { href: "/admin/ilanlar", label: "İş İlanları", icon: Briefcase },
   { href: "/admin/kategoriler", label: "Kategoriler", icon: Tags },
   { href: "/admin/sikayetler", label: "Şikayetler", icon: Flag },
+  { href: "/admin/sorunlar", label: "Sorun Bildirimleri", icon: ShieldAlert },
 ];
 
 export function AdminSidebar() {

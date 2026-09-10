@@ -9,11 +9,13 @@ export const metadata = { title: "Hizmet Taleplerim" };
 const STATUS: Record<string, { label: string; cls: string }> = {
   OPEN: { label: "Teklif topluyor", cls: "badge-emerald" },
   OFFER_SELECTED: { label: "Teklif seçildi", cls: "badge-gold" },
-  IN_ESCROW: { label: "Ödeme emanette", cls: "badge-gold" },
+  SCHEDULED: { label: "Randevu oluşturuldu", cls: "badge-emerald" },
+  IN_PROGRESS: { label: "İş devam ediyor", cls: "badge-emerald" },
   DELIVERED: { label: "Onay bekliyor", cls: "badge-gold" },
   COMPLETED: { label: "Tamamlandı", cls: "badge-navy" },
+  PROBLEM_REPORTED: { label: "Sorun bildirildi", cls: "badge-navy" },
+  CANCELLED: { label: "İptal edildi", cls: "badge-navy" },
   DISPUTED: { label: "İtiraz", cls: "badge-navy" },
-  CANCELLED: { label: "İptal", cls: "badge-navy" },
   DRAFT: { label: "Taslak", cls: "badge-navy" },
 };
 

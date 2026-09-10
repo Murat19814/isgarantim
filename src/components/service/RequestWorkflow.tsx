@@ -1,0 +1,415 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Loader2, CheckCircle2, AlertTriangle, Clock, CalendarPlus, Calendar,
+  FileText, Phone, Mail, Lock, PartyPopper, Star, Send, Play, XCircle, ShieldAlert,
+} from "lucide-react";
+import { cn, formatTRY } from "@/lib/utils";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { PROBLEM_LABELS } from "@/lib/problems";
+
+type ExistingReview = { rating: number; comment: string | null } | null;
+
+type Delivery = {
+  note: string | null;
+  files: string[];
+  deliveredAt: string | null;
+  approvedAt: string | null;
+} | null;
+
+type Contact = {
+  fullName: string;
+  phone: string | null;
+  email: string | null;
+  headline?: string | null;
+};
+
+export function RequestWorkflow({
+  requestId,
+  status,
+  agreedPrice,
+  scheduledAt,
+  delivery,
+  provider,
+  contactUnlocked,
+  existingReview,
+}: {
+  requestId: string;
+  status: string;
+  agreedPrice: number;
+  scheduledAt: string | null;
+  delivery: Delivery;
+  provider: Contact | null;
+  contactUnlocked: boolean;
+  existingReview?: ExistingReview;
+}) {
+  const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [when, setWhen] = useState("");
+
+  async function call(path: string, body?: unknown, confirmMsg?: string) {
+    if (confirmMsg && !confirm(confirmMsg)) return;
+    setLoading(path);
+    setError(null);
+    try {
+      const res = await fetch(`/api/service-requests/${requestId}/${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "İşlem başarısız.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Sunucuya ulaşılamadı.");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  return (
+    <div className="card p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+        <h2 className="font-display text-lg font-bold text-navy-900">İş süreci</h2>
+      </div>
+
+      {error && (
+        <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+
+      <StatusTimeline status={status} />
+
+      {/* Seçilen hizmet veren + iletişim */}
+      {provider && (
+        <div className="mb-4 rounded-xl border border-navy-100 bg-navy-50/50 p-4">
+          <p className="text-xs text-navy-400">Seçilen hizmet veren</p>
+          <p className="font-semibold text-navy-900">{provider.fullName}</p>
+          {provider.headline && <p className="text-xs text-navy-400">{provider.headline}</p>}
+          <div className="mt-2 space-y-1 text-sm">
+            {contactUnlocked ? (
+              <>
+                <p className="inline-flex items-center gap-1.5 text-navy-700">
+                  <Phone className="h-4 w-4 text-emerald-600" /> {provider.phone ?? "—"}
+                </p>
+                <p className="inline-flex items-center gap-1.5 text-navy-700">
+                  <Mail className="h-4 w-4 text-emerald-600" /> {provider.email ?? "—"}
+                </p>
+              </>
+            ) : (
+              <p className="inline-flex items-center gap-1.5 text-navy-400">
+                <Lock className="h-4 w-4" /> İletişim bilgileri randevu sonrası açılır
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Kararlaştırılan tutar */}
+      <div className="mb-4 rounded-xl bg-emerald-50 p-3 text-sm">
+        <p className="text-xs text-emerald-600">Kararlaştırılan tutar (doğrudan ödenir)</p>
+        <p className="font-display text-xl font-bold text-emerald-700">{formatTRY(agreedPrice)}</p>
+        <p className="mt-0.5 text-xs text-navy-400">
+          1. yıl komisyon ve platform ücreti yok. Ödemeyi hizmet verene doğrudan yaparsın.
+        </p>
+      </div>
+
+      {scheduledAt && (
+        <div className="mb-4 inline-flex items-center gap-1.5 rounded-lg bg-navy-50 px-3 py-2 text-sm text-navy-700">
+          <Calendar className="h-4 w-4 text-emerald-600" /> Randevu:{" "}
+          {new Date(scheduledAt).toLocaleString("tr-TR")}
+        </div>
+      )}
+
+      {/* Duruma göre aksiyon */}
+      {status === "OFFER_SELECTED" && (
+        <div className="space-y-3">
+          <div className="flex items-start gap-2 rounded-xl bg-gold-50 p-3 text-sm text-navy-700">
+            <CalendarPlus className="mt-0.5 h-4 w-4 shrink-0 text-gold-500" />
+            Teklifi seçtin. Bir randevu tarihi belirle; iletişim bilgileri açılsın ve süreç başlasın.
+          </div>
+          <input
+            type="datetime-local"
+            value={when}
+            onChange={(e) => setWhen(e.target.value)}
+            className="input"
+          />
+          <button
+            onClick={() =>
+              when
+                ? call("schedule", { scheduledAt: new Date(when).toISOString() })
+                : setError("Lütfen bir tarih/saat seç.")
+            }
+            disabled={loading !== null}
+            className="btn-primary w-full"
+          >
+            {loading === "schedule" ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+              <><CalendarPlus className="h-4 w-4" /> Randevu oluştur</>
+            )}
+          </button>
+          <CancelButton loading={loading === "cancel"} onCancel={(r) => call("cancel", { reason: r })} />
+        </div>
+      )}
+
+      {status === "SCHEDULED" && (
+        <div className="space-y-3">
+          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+            Randevu oluşturuldu. Hizmet verenin işe başlamasını bekliyorsun.
+          </div>
+          <ProblemButton loading={loading === "report"} onReport={(b) => call("report", b)} />
+          <CancelButton loading={loading === "cancel"} onCancel={(r) => call("cancel", { reason: r })} />
+        </div>
+      )}
+
+      {status === "IN_PROGRESS" && (
+        <div className="space-y-3">
+          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
+            <Play className="mt-0.5 h-4 w-4 shrink-0" /> İş devam ediyor.
+          </div>
+          <ProblemButton loading={loading === "report"} onReport={(b) => call("report", b)} />
+        </div>
+      )}
+
+      {status === "DELIVERED" && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+            <p className="flex items-center gap-2 font-semibold text-emerald-800">
+              <FileText className="h-4 w-4" /> Hizmet veren işi tamamladı
+            </p>
+            {delivery?.note && (
+              <p className="mt-2 whitespace-pre-line text-sm text-navy-700">{delivery.note}</p>
+            )}
+            {delivery?.files && delivery.files.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {delivery.files.map((f, i) => (
+                  <a key={i} href={f} target="_blank" rel="noreferrer"
+                     className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-xs text-emerald-700 underline">
+                    <FileText className="h-3.5 w-3.5" /> Dosya {i + 1}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => call("approve", undefined, "İşi onaylıyorsun. Emin misin?")}
+            disabled={loading !== null}
+            className="btn-primary w-full"
+          >
+            {loading === "approve" ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+              <><CheckCircle2 className="h-4 w-4" /> İşi onayla</>
+            )}
+          </button>
+          <ProblemButton loading={loading === "report"} onReport={(b) => call("report", b)} />
+        </div>
+      )}
+
+      {status === "COMPLETED" && (
+        <div className="space-y-4">
+          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
+            <PartyPopper className="mt-0.5 h-5 w-5 shrink-0" />
+            <div>
+              <p className="font-semibold">İş tamamlandı.</p>
+              <p className="mt-1 text-emerald-700">
+                {existingReview ? "Değerlendirmen için teşekkürler!" : "Hizmet vereni değerlendir."}
+              </p>
+            </div>
+          </div>
+          <ReviewBox requestId={requestId} providerName={provider?.fullName ?? "Hizmet veren"} existingReview={existingReview ?? null} />
+          <ProblemButton loading={loading === "report"} onReport={(b) => call("report", b)} />
+        </div>
+      )}
+
+      {status === "PROBLEM_REPORTED" && (
+        <div className="flex items-start gap-2 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold">Sorun bildirildi — ekibimiz inceliyor.</p>
+            <p className="mt-1 text-red-600">En kısa sürede seninle iletişime geçeceğiz.</p>
+          </div>
+        </div>
+      )}
+
+      {status === "CANCELLED" && (
+        <div className="flex items-start gap-2 rounded-xl bg-navy-50 p-4 text-sm text-navy-600">
+          <XCircle className="mt-0.5 h-5 w-5 shrink-0" /> Bu iş iptal edildi.
+        </div>
+      )}
+    </div>
+  );
+}
+
+const STEPS = [
+  { key: "OFFER_SELECTED", label: "Seçildi" },
+  { key: "SCHEDULED", label: "Randevu" },
+  { key: "IN_PROGRESS", label: "Başladı" },
+  { key: "DELIVERED", label: "Tamamlandı" },
+  { key: "COMPLETED", label: "Onaylandı" },
+];
+
+function StatusTimeline({ status }: { status: string }) {
+  const idx = STEPS.findIndex((s) => s.key === status);
+  const current = idx === -1 ? (status === "PROBLEM_REPORTED" ? 2 : 0) : idx;
+  return (
+    <div className="mb-5 flex items-center">
+      {STEPS.map((s, i) => (
+        <div key={s.key} className="flex flex-1 items-center last:flex-none">
+          <div className="flex flex-col items-center">
+            <div className={cn("grid h-7 w-7 place-items-center rounded-full text-xs font-bold",
+              i <= current ? "bg-emerald-600 text-white" : "bg-navy-100 text-navy-400")}>
+              {i < current ? "✓" : i + 1}
+            </div>
+            <span className={cn("mt-1 text-[10px]", i <= current ? "text-emerald-700" : "text-navy-400")}>
+              {s.label}
+            </span>
+          </div>
+          {i < STEPS.length - 1 && (
+            <div className={cn("mx-1 h-0.5 flex-1", i < current ? "bg-emerald-600" : "bg-navy-100")} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProblemButton({ loading, onReport }: { loading: boolean; onReport: (b: unknown) => void }) {
+  const [show, setShow] = useState(false);
+  const [type, setType] = useState("OTHER");
+  const [desc, setDesc] = useState("");
+  const [media, setMedia] = useState<string[]>([]);
+
+  if (!show)
+    return (
+      <button onClick={() => setShow(true)}
+        className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700">
+        <AlertTriangle className="h-4 w-4" /> Sorun bildir
+      </button>
+    );
+
+  return (
+    <div className="rounded-xl border border-red-100 bg-red-50/50 p-4">
+      <label className="mb-1 block text-sm font-medium text-navy-700">Sorun türü</label>
+      <select value={type} onChange={(e) => setType(e.target.value)} className="input mb-2">
+        {Object.entries(PROBLEM_LABELS).map(([k, v]) => (
+          <option key={k} value={k}>{v}</option>
+        ))}
+      </select>
+      <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3}
+        className="input resize-none" placeholder="Sorunu detaylıca anlat (en az 10 karakter)..." />
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <FileUpload accept="image/*,video/*" label="Foto/video ekle" onUploaded={(u) => setMedia((m) => [...m, u])} />
+        {media.map((_, i) => (
+          <span key={i} className="rounded-full bg-navy-100 px-2 py-0.5 text-xs text-navy-600">Dosya {i + 1}</span>
+        ))}
+      </div>
+      <div className="mt-2 flex gap-2">
+        <button onClick={() => onReport({ type, description: desc, media })}
+          disabled={loading || desc.trim().length < 10} className="btn-primary text-sm">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gönder"}
+        </button>
+        <button onClick={() => setShow(false)} className="btn-ghost text-sm">Vazgeç</button>
+      </div>
+    </div>
+  );
+}
+
+function CancelButton({ loading, onCancel }: { loading: boolean; onCancel: (reason: string) => void }) {
+  const [show, setShow] = useState(false);
+  const [reason, setReason] = useState("");
+  if (!show)
+    return (
+      <button onClick={() => setShow(true)}
+        className="inline-flex items-center gap-1 text-sm font-medium text-navy-400 hover:text-navy-700">
+        <XCircle className="h-4 w-4" /> İptal et
+      </button>
+    );
+  return (
+    <div className="rounded-xl border border-navy-100 bg-navy-50/50 p-4">
+      <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
+        className="input resize-none" placeholder="İptal nedeni (en az 5 karakter)..." />
+      <div className="mt-2 flex gap-2">
+        <button onClick={() => onCancel(reason)} disabled={loading || reason.trim().length < 5}
+          className="btn-primary text-sm">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "İptal et"}
+        </button>
+        <button onClick={() => setShow(false)} className="btn-ghost text-sm">Vazgeç</button>
+      </div>
+    </div>
+  );
+}
+
+function ReviewBox({ requestId, providerName, existingReview }: {
+  requestId: string; providerName: string; existingReview: ExistingReview;
+}) {
+  const router = useRouter();
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (existingReview) {
+    return (
+      <div className="rounded-xl border border-navy-100 p-4">
+        <p className="mb-2 text-sm font-semibold text-navy-900">Değerlendirmen</p>
+        <Stars value={existingReview.rating} />
+        {existingReview.comment && (
+          <p className="mt-2 whitespace-pre-line text-sm text-navy-600">{existingReview.comment}</p>
+        )}
+      </div>
+    );
+  }
+
+  async function submit() {
+    if (rating < 1) { setError("Lütfen bir puan seç."); return; }
+    setLoading(true); setError(null);
+    try {
+      const res = await fetch(`/api/service-requests/${requestId}/review`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment: comment || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Değerlendirme gönderilemedi."); return; }
+      router.refresh();
+    } catch { setError("Sunucuya ulaşılamadı."); } finally { setLoading(false); }
+  }
+
+  return (
+    <div className="rounded-xl border border-gold-200 bg-gold-50/50 p-4">
+      <p className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-navy-900">
+        <Star className="h-4 w-4 text-gold-500" /> {providerName} için değerlendirme
+      </p>
+      {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+      <div className="mb-3 flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)}
+            onClick={() => setRating(n)} className="p-0.5" aria-label={`${n} yıldız`}>
+            <Star className={cn("h-7 w-7 transition-colors",
+              (hover || rating) >= n ? "fill-gold-400 text-gold-400" : "text-navy-200")} />
+          </button>
+        ))}
+      </div>
+      <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3}
+        className="input resize-none" placeholder="Deneyimini birkaç cümleyle anlat (opsiyonel)..." />
+      <button onClick={submit} disabled={loading} className="btn-primary mt-3 w-full text-sm">
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (<><Send className="h-4 w-4" /> Gönder</>)}
+      </button>
+    </div>
+  );
+}
+
+function Stars({ value }: { value: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star key={n} className={cn("h-5 w-5", value >= n ? "fill-gold-400 text-gold-400" : "text-navy-200")} />
+      ))}
+    </div>
+  );
+}

@@ -4,6 +4,7 @@ import {
   PaymentStatus,
   DisputeStatus,
   JobPostingStatus,
+  ProblemStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -42,6 +43,10 @@ export async function getAdminStats() {
     prisma.complaint.count({ where: { isResolved: false } }),
   ]);
 
+  const openProblems = await prisma.problemReport.count({
+    where: { status: { in: [ProblemStatus.OPEN, ProblemStatus.UNDER_REVIEW] } },
+  });
+
   return {
     userCount,
     providerCount,
@@ -51,7 +56,37 @@ export async function getAdminStats() {
     openDisputes,
     activePostings,
     unresolvedComplaints,
+    openProblems,
   };
+}
+
+// ─────────────────────────────────────────────
+// SORUN BİLDİRİMLERİ (1. yıl — kayıt + admin aksiyonu)
+// ─────────────────────────────────────────────
+
+export async function listProblemReports() {
+  return prisma.problemReport.findMany({
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    take: 200,
+    include: {
+      reporter: { select: { id: true, fullName: true, email: true } },
+      serviceRequest: {
+        select: { id: true, title: true, city: true, status: true },
+      },
+    },
+  });
+}
+
+export async function updateProblemReport(
+  id: string,
+  status: ProblemStatus,
+  adminNote?: string,
+) {
+  return prisma.problemReport.update({
+    where: { id },
+    data: { status, adminNote },
+    select: { id: true, status: true },
+  });
 }
 
 // ─────────────────────────────────────────────

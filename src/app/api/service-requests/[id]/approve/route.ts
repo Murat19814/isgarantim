@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/guards";
-import { approveWork, PaymentError } from "@/lib/services/payments";
+import { approveByCustomer, WorkflowError } from "@/lib/services/workflow";
 
-/** POST — müşteri işi onaylar, ödeme hizmet verene aktarılır. */
+/** POST — müşteri işi onaylar (1. yıl: ödeme yok, sadece tamamlandı kaydı). */
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } },
@@ -11,10 +11,10 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
 
   try {
-    const result = await approveWork(user.id, params.id);
+    const result = await approveByCustomer(user.id, params.id);
     return NextResponse.json(result);
   } catch (e) {
-    if (e instanceof PaymentError)
+    if (e instanceof WorkflowError)
       return NextResponse.json({ error: e.message }, { status: 400 });
     throw e;
   }

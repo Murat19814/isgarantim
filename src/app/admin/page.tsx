@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  Users, Wrench, ClipboardList, Wallet, TrendingUp, Gavel, Briefcase, Flag, ArrowRight,
+  Users, Wrench, ClipboardList, Wallet, TrendingUp, Gavel, Briefcase, Flag, ArrowRight, ShieldAlert,
 } from "lucide-react";
 import { getAdminStats } from "@/lib/services/admin";
 import { formatTRY } from "@/lib/utils";
@@ -17,6 +17,7 @@ export default async function AdminDashboard() {
     { label: "Açık itiraz", value: s.openDisputes, icon: Gavel, href: "/admin/itirazlar", tone: "red" },
     { label: "Aktif ilan", value: s.activePostings, icon: Briefcase, href: "/admin/ilanlar", tone: "navy" },
     { label: "Bekleyen şikayet", value: s.unresolvedComplaints, icon: Flag, href: "/admin/sikayetler", tone: "red" },
+    { label: "Açık sorun bildirimi", value: s.openProblems, icon: ShieldAlert, href: "/admin/sorunlar", tone: "red" },
   ];
 
   const tones: Record<string, string> = {

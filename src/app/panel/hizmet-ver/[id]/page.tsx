@@ -7,7 +7,6 @@ import {
   getRequestWorkflow,
 } from "@/lib/services/serviceRequests";
 import { getOrCreateConversationForRequest } from "@/lib/services/messaging";
-import { computeFees } from "@/lib/services/payments";
 import { ProviderWorkflow } from "@/components/provider/ProviderWorkflow";
 import { ChatBox } from "@/components/messaging/ChatBox";
 
@@ -31,8 +30,6 @@ export default async function Page({ params }: { params: { id: string } }) {
     params.id,
     session.user.id,
   ).catch(() => null);
-
-  const { platformFee, providerPayout } = computeFees(workflow.payment.amount);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -76,14 +73,8 @@ export default async function Page({ params }: { params: { id: string } }) {
         <ProviderWorkflow
           requestId={request.id}
           status={workflow.status}
-          amount={workflow.payment.amount}
-          platformFee={platformFee}
-          providerPayout={providerPayout}
-          approvalDeadline={
-            workflow.payment.approvalDeadline
-              ? workflow.payment.approvalDeadline.toISOString()
-              : null
-          }
+          agreedPrice={workflow.agreedPrice ?? workflow.payment.amount}
+          scheduledAt={workflow.scheduledAt ? workflow.scheduledAt.toISOString() : null}
           delivery={
             workflow.payment.delivery
               ? {
@@ -104,7 +95,6 @@ export default async function Page({ params }: { params: { id: string } }) {
             email: workflow.customer.email,
           }}
           contactUnlocked={workflow.conversation?.contactUnlocked ?? false}
-          disputeReason={workflow.dispute?.reason ?? null}
         />
 
         {convo ? (

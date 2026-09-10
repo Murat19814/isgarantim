@@ -65,8 +65,13 @@ export async function getRequestWorkflow(requestId: string) {
     where: { id: requestId },
     select: {
       id: true,
+      title: true,
       status: true,
       customerId: true,
+      scheduledAt: true,
+      agreedPrice: true,
+      startedAt: true,
+      completedAt: true,
       customer: { select: { id: true, fullName: true, phone: true, email: true } },
       payment: {
         select: {

@@ -32,11 +32,14 @@ enum VerificationChannel {
 enum ServiceRequestStatus {
   DRAFT // Taslak (çok adımlı form)
   OPEN // Teklif topluyor
-  OFFER_SELECTED // Teklif seçildi, ödeme bekleniyor
-  IN_ESCROW // Ödeme emanette, iş devam ediyor
+  OFFER_SELECTED // Teklif seçildi, randevu bekleniyor
+  SCHEDULED // Randevu oluşturuldu (1. yıl emanetsiz akış)
+  IN_ESCROW // (eski) Ödeme emanette — 1. yıl kullanılmıyor
+  IN_PROGRESS // İş başladı
   DELIVERED // Hizmet veren "tamamladım" dedi, onay bekliyor
-  COMPLETED // Müşteri onayladı, ödeme aktarıldı
-  DISPUTED // İtiraz açıldı
+  COMPLETED // Müşteri onayladı
+  PROBLEM_REPORTED // Sorun bildirildi (admin inceliyor)
+  DISPUTED // (eski) İtiraz
   CANCELLED
 }
 
@@ -139,6 +142,7 @@ model User {
   jobApplications  JobApplication[]
   notifications    Notification[]
   complaintsFiled  Complaint[]      @relation("ComplaintReporter")
+  problemReports   ProblemReport[]  @relation("ProblemReporter")
   verificationTokens VerificationToken[]
 
   @@index([email])
@@ -259,16 +263,62 @@ model ServiceRequest {
   preferredDate DateTime?
   photos      String[] // Yüklenen fotoğraf URL'leri
   status      ServiceRequestStatus @default(OPEN)
+  // 1. yıl emanetsiz akış alanları
+  scheduledAt DateTime? // Kararlaştırılan randevu tarihi
+  agreedPrice Int? // Taraflarca kabul edilen tutar (raporlama)
+  startedAt   DateTime? // İş başlangıç zamanı
+  completedAt DateTime? // Müşteri onay zamanı
   offers      Offer[]
   payment     Payment?
   conversation Conversation?
   dispute     Dispute?
   review      Review?
+  problems    ProblemReport[]
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
   @@index([categoryId])
   @@index([city])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────
+// SORUN BİLDİR (1. yıl — ödeme iadesi kararı YOK, sadece kayıt + admin aksiyonu)
+// ─────────────────────────────────────────────
+
+enum ProblemType {
+  PROVIDER_NO_SHOW // Hizmet veren gelmedi
+  CUSTOMER_NO_SHOW // Müşteri randevuya uymadı
+  PRICE_CHANGED // Fiyat sonradan değiştirildi
+  INCOMPLETE_WORK // İş eksik yapıldı
+  DAMAGE // Hasar oluştu
+  MISCONDUCT // Uygunsuz davranış
+  FRAUD // Dolandırıcılık şüphesi
+  OTHER // Diğer
+}
+
+enum ProblemStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+model ProblemReport {
+  id               String         @id @default(cuid())
+  serviceRequestId String
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  reporterId       String
+  reporter         User           @relation("ProblemReporter", fields: [reporterId], references: [id])
+  type             ProblemType
+  description      String
+  media            String[] // Foto/video URL'leri
+  status           ProblemStatus  @default(OPEN)
+  adminNote        String? // Yalnız admin görür
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([serviceRequestId])
   @@index([status])
 }
 

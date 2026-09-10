@@ -82,3 +82,34 @@ export const reviewSchema = z.object({
 });
 
 export type ReviewInput = z.infer<typeof reviewSchema>;
+
+/** Randevu oluşturma (müşteri, teklif seçtikten sonra). */
+export const scheduleSchema = z.object({
+  scheduledAt: z.string().datetime({ message: "Geçerli bir tarih/saat seç." }),
+});
+export type ScheduleInput = z.infer<typeof scheduleSchema>;
+
+/** Sorun bildir (1. yıl — ödeme iadesi kararı yok, kayıt + admin aksiyonu). */
+export const PROBLEM_TYPES = [
+  "PROVIDER_NO_SHOW",
+  "CUSTOMER_NO_SHOW",
+  "PRICE_CHANGED",
+  "INCOMPLETE_WORK",
+  "DAMAGE",
+  "MISCONDUCT",
+  "FRAUD",
+  "OTHER",
+] as const;
+
+export const problemReportSchema = z.object({
+  type: z.enum(PROBLEM_TYPES),
+  description: z.string().min(10, "Sorunu en az 10 karakter anlat.").max(2000),
+  media: z.array(mediaUrl).max(8, "En fazla 8 dosya.").default([]),
+});
+export type ProblemReportInput = z.infer<typeof problemReportSchema>;
+
+/** İş iptali. */
+export const cancelSchema = z.object({
+  reason: z.string().min(5, "İptal nedenini yaz.").max(1000),
+});
+export type CancelInput = z.infer<typeof cancelSchema>;

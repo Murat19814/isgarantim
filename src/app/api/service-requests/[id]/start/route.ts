@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { UserRole } from "@prisma/client";
 import { getSessionUser, hasRole } from "@/lib/auth/guards";
-import { deliverWorkSchema } from "@/lib/validations/service";
-import { completeByProvider, WorkflowError } from "@/lib/services/workflow";
+import { startJob, WorkflowError } from "@/lib/services/workflow";
 
-/** POST — hizmet veren "işi tamamladım" der (not + dosya). */
+/** POST — hizmet veren işe başlar (randevudan sonra). */
 export async function POST(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } },
 ) {
   const user = await getSessionUser();
@@ -17,16 +16,8 @@ export async function POST(
       { status: 403 },
     );
 
-  const parsed = deliverWorkSchema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Doğrulama hatası", issues: parsed.error.flatten().fieldErrors },
-      { status: 422 },
-    );
-  }
-
   try {
-    const result = await completeByProvider(user.id, params.id, parsed.data);
+    const result = await startJob(user.id, params.id);
     return NextResponse.json(result);
   } catch (e) {
     if (e instanceof WorkflowError)

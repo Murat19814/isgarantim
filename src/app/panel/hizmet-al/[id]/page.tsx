@@ -10,7 +10,7 @@ import { getReviewForRequest } from "@/lib/services/reviews";
 import { getOrCreateConversationForRequest } from "@/lib/services/messaging";
 import { formatTRY } from "@/lib/utils";
 import { OfferComparison } from "@/components/service/OfferComparison";
-import { EscrowWorkflow } from "@/components/service/EscrowWorkflow";
+import { RequestWorkflow } from "@/components/service/RequestWorkflow";
 import { ChatBox } from "@/components/messaging/ChatBox";
 
 export const metadata = { title: "Talep Detayı" };
@@ -96,19 +96,14 @@ export default async function Page({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      {/* Emanet / iş akışı (teklif seçildikten sonra) */}
+      {/* İş akışı (teklif seçildikten sonra) — 1. yıl emanetsiz */}
       {workflow && workflow.payment && (
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <EscrowWorkflow
+          <RequestWorkflow
             requestId={request.id}
             status={workflow.status}
-            amount={workflow.payment.amount}
-            platformFee={workflow.payment.platformFee}
-            approvalDeadline={
-              workflow.payment.approvalDeadline
-                ? workflow.payment.approvalDeadline.toISOString()
-                : null
-            }
+            agreedPrice={workflow.agreedPrice ?? workflow.payment.amount}
+            scheduledAt={workflow.scheduledAt ? workflow.scheduledAt.toISOString() : null}
             delivery={
               workflow.payment.delivery
                 ? {
@@ -134,7 +129,6 @@ export default async function Page({ params }: { params: { id: string } }) {
                 : null
             }
             contactUnlocked={workflow.conversation?.contactUnlocked ?? false}
-            disputeReason={workflow.dispute?.reason ?? null}
             existingReview={
               existingReview
                 ? { rating: existingReview.rating, comment: existingReview.comment }

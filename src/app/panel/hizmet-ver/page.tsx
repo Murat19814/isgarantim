@@ -13,11 +13,13 @@ import { ProviderDashboard } from "@/components/provider/ProviderDashboard";
 export const metadata = { title: "Hizmet Veren Paneli" };
 
 const JOB_STATUS: Record<string, { label: string; cls: string }> = {
-  OFFER_SELECTED: { label: "Ödeme bekleniyor", cls: "badge-gold" },
-  IN_ESCROW: { label: "İşe başla", cls: "badge-emerald" },
+  OFFER_SELECTED: { label: "Randevu bekleniyor", cls: "badge-gold" },
+  SCHEDULED: { label: "Randevu oluşturuldu", cls: "badge-emerald" },
+  IN_PROGRESS: { label: "İş devam ediyor", cls: "badge-emerald" },
   DELIVERED: { label: "Onay bekliyor", cls: "badge-gold" },
   COMPLETED: { label: "Tamamlandı", cls: "badge-navy" },
-  DISPUTED: { label: "İtiraz", cls: "badge-navy" },
+  PROBLEM_REPORTED: { label: "Sorun bildirildi", cls: "badge-navy" },
+  CANCELLED: { label: "İptal edildi", cls: "badge-navy" },
 };
 
 export default async function Page() {
