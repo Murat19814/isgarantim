@@ -76,6 +76,13 @@ export default async function Page({ params }: { params: { id: string } }) {
             ))}
           </div>
         )}
+        {request.voiceNote && (
+          <div className="mt-4">
+            <p className="mb-1 text-xs font-medium text-navy-500">Sesli açıklama</p>
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <audio src={request.voiceNote} controls className="w-full max-w-sm" />
+          </div>
+        )}
         {request.photos.length > 0 && (
           <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {request.photos.map((src, i) => (

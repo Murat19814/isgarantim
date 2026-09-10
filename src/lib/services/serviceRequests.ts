@@ -25,6 +25,7 @@ export async function createServiceRequest(
       contactPreference: input.contactPreference,
       photos: input.photos ?? [],
       videos: input.videos ?? [],
+      voiceNote: input.voiceNote,
       status: ServiceRequestStatus.OPEN,
     },
   });
@@ -156,6 +157,7 @@ export async function getRequestForProvider(
       neighborhood: true,
       photos: true,
       videos: true,
+      voiceNote: true,
       urgency: true,
       locationType: true,
       contactPreference: true,

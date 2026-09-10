@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { Year1Banner } from "@/components/Year1Banner";
+import { QuickModes } from "@/components/QuickModes";
 import { EntryCards } from "@/components/EntryCards";
 import { Stats } from "@/components/Stats";
 import { Categories } from "@/components/Categories";
@@ -17,6 +18,7 @@ export default function HomePage() {
       <main>
         <Hero />
         <Year1Banner />
+        <QuickModes />
         <EntryCards />
         <Stats />
         <Categories />

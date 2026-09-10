@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   HandHelping, Wrench, Briefcase, Building2, ShieldAlert,
-  Mail, Smartphone, ArrowRight, ShieldCheck, Bell, Gift,
+  Mail, Smartphone, ArrowRight, ShieldCheck, Bell, Gift, Heart, TrendingUp,
 } from "lucide-react";
 import { auth } from "@/lib/auth/session";
 import { ROLE_LABELS, type UserRole } from "@/lib/constants";
@@ -139,6 +139,20 @@ export default async function PanelPage() {
           className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700"
         >
           <Gift className="h-4 w-4" /> Arkadaşını davet et, Kurucu Üye ol
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+        <Link
+          href="/panel/favoriler"
+          className="inline-flex items-center gap-2 text-sm font-medium text-navy-500 hover:text-navy-800"
+        >
+          <Heart className="h-4 w-4" /> Favori hizmet verenlerim
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+        <Link
+          href="/fiyat-rehberi"
+          className="inline-flex items-center gap-2 text-sm font-medium text-navy-500 hover:text-navy-800"
+        >
+          <TrendingUp className="h-4 w-4" /> Fiyat rehberi
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

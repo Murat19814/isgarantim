@@ -173,10 +173,25 @@ model User {
   referrals        User[]           @relation("Referrals")
   isFounder        Boolean          @default(false) // Kurucu üye rozeti
   referralMilestone Int             @default(0) // Ulaşılan davet ödül kademesi
+  favorites        Favorite[]       @relation("FavoriteOwner")
+  favoritedBy      Favorite[]       @relation("FavoriteProvider")
 
   @@index([email])
   @@index([phone])
   @@index([referredById])
+}
+
+// Favori hizmet verenler
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation("FavoriteOwner", fields: [userId], references: [id], onDelete: Cascade)
+  providerId String
+  provider   User     @relation("FavoriteProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, providerId])
+  @@index([userId])
 }
 
 // Bildirim tercihleri (kanal + tür bazlı). Uygulama içi bildirim her zaman açık kabul edilir.
@@ -367,6 +382,7 @@ model ServiceRequest {
   preferredDate DateTime?
   photos      String[] // Yüklenen fotoğraf URL'leri
   videos      String[] // Yüklenen video URL'leri
+  voiceNote   String? // Sesli talep kaydı (URL)
   neighborhood String? // Mahalle
   urgency     RequestUrgency  @default(FLEXIBLE)
   locationType RequestLocation @default(ONSITE)

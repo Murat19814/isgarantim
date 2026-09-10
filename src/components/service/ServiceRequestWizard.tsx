@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video,
+  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -41,8 +41,16 @@ export function ServiceRequestWizard({
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoInput, setPhotoInput] = useState("");
   const [videos, setVideos] = useState<string[]>([]);
+  const [voiceNote, setVoiceNote] = useState<string>("");
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
+
+  // Hızlı modlar: /panel/hizmet-al/yeni?urgency=URGENT (aynı gün) vb.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const u = sp.get("urgency");
+    if (u === "URGENT" || u === "THIS_WEEK") setUrgency(u);
+  }, []);
 
   function canProceed(): boolean {
     if (step === 0) return !!categoryId;
@@ -87,6 +95,7 @@ export function ServiceRequestWizard({
       contactPreference,
       photos,
       videos,
+      voiceNote: voiceNote || undefined,
     };
     try {
       const res = await fetch("/api/service-requests", {
@@ -413,6 +422,22 @@ export function ServiceRequestWizard({
               </div>
             )}
           </div>
+
+          {/* Sesli talep (opsiyonel) */}
+          <div className="border-t border-navy-100 pt-4">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-navy-800">
+              <Mic className="h-4 w-4 text-emerald-600" /> Sesli anlat (opsiyonel)
+            </p>
+            <p className="mb-2 text-xs text-navy-500">
+              Yazmak yerine işini sesli anlatabilirsin. Hizmet verenler dinleyip teklif verir.
+            </p>
+            <VoiceRecorder
+              value={voiceNote}
+              onRecorded={(url) => setVoiceNote(url)}
+              onClear={() => setVoiceNote("")}
+              onError={(m) => setError(m)}
+            />
+          </div>
         </div>
       )}
 
@@ -475,6 +500,91 @@ export function ServiceRequestWizard({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function VoiceRecorder({
+  value, onRecorded, onClear, onError,
+}: {
+  value: string;
+  onRecorded: (url: string) => void;
+  onClear: () => void;
+  onError: (msg: string) => void;
+}) {
+  const [recording, setRecording] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [secs, setSecs] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  async function start() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (timerRef.current) clearInterval(timerRef.current);
+        setSecs(0);
+        const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
+        const file = new File([blob], `talep-ses-${Date.now()}.webm`, { type: "audio/webm" });
+        setUploading(true);
+        try {
+          const fd = new FormData();
+          fd.append("file", file);
+          const res = await fetch("/api/upload", { method: "POST", body: fd });
+          const data = await res.json();
+          if (res.ok) onRecorded(data.url);
+          else onError(data.error ?? "Ses yüklenemedi.");
+        } finally {
+          setUploading(false);
+        }
+      };
+      rec.start();
+      recorderRef.current = rec;
+      setRecording(true);
+      setSecs(0);
+      timerRef.current = setInterval(() => setSecs((s) => s + 1), 1000);
+    } catch {
+      onError("Mikrofona erişilemedi. İzin verdiğinden emin ol.");
+    }
+  }
+
+  function stop() {
+    recorderRef.current?.stop();
+    setRecording(false);
+  }
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-3">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <audio src={value} controls className="h-9 max-w-[240px]" />
+        <button type="button" onClick={onClear}
+          className="inline-flex items-center gap-1 text-xs text-navy-400 hover:text-red-600">
+          <Trash2 className="h-3.5 w-3.5" /> Sil
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {recording ? (
+        <button type="button" onClick={stop}
+          className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white">
+          <Square className="h-4 w-4" /> {secs}s · Durdur
+        </button>
+      ) : (
+        <button type="button" onClick={start} disabled={uploading}
+          className="btn-outline text-sm">
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+          {uploading ? "Yükleniyor..." : "Kaydı başlat"}
+        </button>
+      )}
     </div>
   );
 }

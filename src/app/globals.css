@@ -12,6 +12,23 @@
   html {
     scroll-behavior: smooth;
   }
+  /* Yaşlı / erişilebilirlik modu: büyük yazı + daha yüksek kontrast/dokunma alanı */
+  html.a11y-large {
+    font-size: 20px;
+  }
+  html.a11y-large button,
+  html.a11y-large a,
+  html.a11y-large input,
+  html.a11y-large select,
+  html.a11y-large textarea {
+    line-height: 1.6;
+  }
+  html.a11y-large .btn-primary,
+  html.a11y-large .btn-outline,
+  html.a11y-large .btn-navy,
+  html.a11y-large .btn-gold {
+    @apply px-6 py-3.5 text-base;
+  }
   body {
     @apply bg-white text-navy-900 antialiased;
     font-feature-settings: "cv11", "ss01";

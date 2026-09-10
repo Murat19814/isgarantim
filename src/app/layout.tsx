@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { AccessibilityToggle } from "@/components/AccessibilityToggle";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -58,6 +59,7 @@ export default function RootLayout({
     <html lang="tr" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="min-h-screen font-sans">
         <SessionProvider>{children}</SessionProvider>
+        <AccessibilityToggle />
       </body>
     </html>
   );

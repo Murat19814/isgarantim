@@ -5,7 +5,10 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { VerificationBadges } from "@/components/VerificationBadges";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { getPublicProviderProfile } from "@/lib/services/providerProfile";
+import { isFavorited } from "@/lib/services/favorites";
+import { auth } from "@/lib/auth/session";
 import { REVIEW_CRITERIA } from "@/lib/validations/service";
 
 export const metadata = { title: "Hizmet Veren Profili" };
@@ -13,6 +16,11 @@ export const metadata = { title: "Hizmet Veren Profili" };
 export default async function Page({ params }: { params: { id: string } }) {
   const data = await getPublicProviderProfile(params.id);
   if (!data) notFound();
+
+  const session = await auth();
+  const viewerId = session?.user?.id ?? null;
+  const favorited =
+    viewerId && viewerId !== params.id ? await isFavorited(viewerId, params.id) : false;
 
   const { profile, badges, reviews, repeatRate, criteriaAvg } = data;
   const p = profile;
@@ -52,8 +60,15 @@ export default async function Page({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <VerificationBadges badges={badges} size="md" />
+              {viewerId !== params.id && (
+                <FavoriteButton
+                  providerId={params.id}
+                  initialFavorited={favorited}
+                  canFavorite={!!viewerId}
+                />
+              )}
             </div>
 
             {/* İstatistikler */}
