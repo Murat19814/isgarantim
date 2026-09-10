@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck, UserCog } from "lucide-react";
+import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck, UserCog, Target } from "lucide-react";
 import { formatTRY } from "@/lib/utils";
 import { MAX_OFFERS_PER_REQUEST } from "@/lib/constants";
 
@@ -26,6 +26,8 @@ type OpenRequest = {
   offerCount: number;
   budgetMin: number | null;
   budgetMax: number | null;
+  recommended?: boolean;
+  matchReasons?: string[] | null;
   myOffer: MyOffer | null;
 };
 
@@ -75,10 +77,22 @@ export function ProviderDashboard({ requests }: { requests: OpenRequest[] }) {
               const full = !r.myOffer && r.offerCount >= MAX_OFFERS_PER_REQUEST;
               const open = offerFor === r.id;
               return (
-                <div key={r.id} className="card p-5">
+                <div key={r.id} className={r.recommended ? "card p-5 ring-2 ring-emerald-200" : "card p-5"}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <span className="badge-navy">{r.categoryName}</span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="badge-navy">{r.categoryName}</span>
+                        {r.recommended && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                            <Target className="h-3 w-3" /> Sana uygun
+                          </span>
+                        )}
+                        {r.recommended && r.matchReasons?.map((reason) => (
+                          <span key={reason} className="rounded-full bg-navy-50 px-2 py-0.5 text-[11px] text-navy-500">
+                            {reason}
+                          </span>
+                        ))}
+                      </div>
                       <p className="mt-1 truncate font-semibold text-navy-900">{r.title}</p>
                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-navy-400">
                         <span className="inline-flex items-center gap-1">

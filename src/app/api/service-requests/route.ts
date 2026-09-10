@@ -6,6 +6,7 @@ import {
   listCustomerRequests,
   listOpenRequests,
 } from "@/lib/services/serviceRequests";
+import { notifyMatchingProviders } from "@/lib/services/matching";
 
 /** GET ?scope=mine (müşteri talepleri) | open (hizmet verenler için açık talepler) */
 export async function GET(req: Request) {
@@ -40,5 +41,11 @@ export async function POST(req: Request) {
   }
 
   const request = await createServiceRequest(user.id, parsed.data);
+
+  // Eşleşen hizmet verenlere bildirim (akış bozulmasın diye hata yutulur).
+  notifyMatchingProviders(request.id).catch((e) =>
+    console.error("[notifyMatchingProviders] başarısız:", e),
+  );
+
   return NextResponse.json({ ok: true, id: request.id }, { status: 201 });
 }

@@ -1,6 +1,7 @@
 import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { notify } from "@/lib/services/notifications";
+import { getPreferences } from "@/lib/services/preferences";
 import type { MessageInput } from "@/lib/validations/service";
 
 export class MessagingError extends Error {}
@@ -258,6 +259,9 @@ export async function sendMessage(
       }))?.fullName ?? "Bir kullanıcı";
     for (const p of convo.participants) {
       if (p.userId === userId) continue;
+      // "Yeni mesaj" bildirimi tercihi kapalıysa atla.
+      const pref = await getPreferences(p.userId);
+      if (!pref.messages) continue;
       const isCustomer = p.userId === convo.serviceRequest?.customerId;
       await notify(p.userId, {
         type: "MESSAGE_RECEIVED",

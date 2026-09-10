@@ -7,6 +7,7 @@ import {
   listOpenRequests,
   listProviderActiveJobs,
 } from "@/lib/services/serviceRequests";
+import { getRecommendedRequestsForProvider } from "@/lib/services/matching";
 import { formatTRY } from "@/lib/utils";
 import { ProviderDashboard } from "@/components/provider/ProviderDashboard";
 
@@ -26,10 +27,12 @@ export default async function Page() {
   const session = await auth();
   if (!session?.user) redirect("/giris?callbackUrl=/panel/hizmet-ver");
 
-  const [openRequests, activeJobs] = await Promise.all([
+  const [openRequests, activeJobs, recommended] = await Promise.all([
     listOpenRequests(),
     listProviderActiveJobs(session.user.id),
+    getRecommendedRequestsForProvider(session.user.id, 20),
   ]);
+  const recMap = new Map(recommended.map((r) => [r.id, r.reasons]));
 
   // Kendi taleplerini listeden çıkar
   const visible = openRequests.filter((r) => r.customerId !== session.user.id);
@@ -53,30 +56,36 @@ export default async function Page() {
   });
   const offerMap = new Map(myOffers.map((o) => [o.serviceRequestId, o]));
 
-  const requests = visible.map((r) => {
-    const mine = offerMap.get(r.id);
-    return {
-      id: r.id,
-      title: r.title,
-      city: r.city,
-      district: r.district,
-      categoryName: r.category.name,
-      offerCount: r._count.offers,
-      budgetMin: r.budgetMin,
-      budgetMax: r.budgetMax,
-      myOffer: mine
-        ? {
-            price: mine.price,
-            estimatedDuration: mine.estimatedDuration ?? "",
-            message: mine.message ?? "",
-            availability: mine.availability ?? "",
-            materialsIncluded: mine.materialsIncluded ?? false,
-            onSiteInspection: mine.onSiteInspection ?? false,
-            status: mine.status as string,
-          }
-        : null,
-    };
-  });
+  const requests = visible
+    .map((r) => {
+      const mine = offerMap.get(r.id);
+      const matchReasons = recMap.get(r.id) ?? null;
+      return {
+        id: r.id,
+        title: r.title,
+        city: r.city,
+        district: r.district,
+        categoryName: r.category.name,
+        offerCount: r._count.offers,
+        budgetMin: r.budgetMin,
+        budgetMax: r.budgetMax,
+        recommended: !!matchReasons,
+        matchReasons,
+        myOffer: mine
+          ? {
+              price: mine.price,
+              estimatedDuration: mine.estimatedDuration ?? "",
+              message: mine.message ?? "",
+              availability: mine.availability ?? "",
+              materialsIncluded: mine.materialsIncluded ?? false,
+              onSiteInspection: mine.onSiteInspection ?? false,
+              status: mine.status as string,
+            }
+          : null,
+      };
+    })
+    // Önerilenleri öne al
+    .sort((a, b) => Number(b.recommended) - Number(a.recommended));
 
   return (
     <div>
