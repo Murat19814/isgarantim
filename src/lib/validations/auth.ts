@@ -21,6 +21,7 @@ export const registerSchema = z
     roles: z
       .array(z.enum(ROLE_VALUES))
       .min(1, "En az bir rol seç."),
+    referralCode: z.string().trim().min(4).max(16).optional(),
   })
   .strict();
 

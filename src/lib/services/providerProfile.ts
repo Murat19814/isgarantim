@@ -67,7 +67,7 @@ export async function getPublicProviderProfile(userId: string) {
       completedJobs: true,
       avgResponseMin: true,
       categories: { select: { id: true, name: true } },
-      user: { select: { id: true, fullName: true, avatarUrl: true, createdAt: true } },
+      user: { select: { id: true, fullName: true, avatarUrl: true, createdAt: true, isFounder: true } },
     },
   });
   if (!profile) return null;

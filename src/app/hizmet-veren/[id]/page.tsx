@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import {
-  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock,
+  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock, Award,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -40,7 +40,14 @@ export default async function Page({ params }: { params: { id: string } }) {
                 )}
               </span>
               <div className="pb-1">
-                <h1 className="font-display text-2xl font-extrabold text-navy-900">{p.user.fullName}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-display text-2xl font-extrabold text-navy-900">{p.user.fullName}</h1>
+                  {p.user.isFounder && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gold-100 px-2 py-0.5 text-xs font-semibold text-gold-700">
+                      <Award className="h-3.5 w-3.5" /> Kurucu Üye
+                    </span>
+                  )}
+                </div>
                 {p.headline && <p className="text-sm text-navy-500">{p.headline}</p>}
               </div>
             </div>

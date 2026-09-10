@@ -75,5 +75,13 @@ export async function confirmVerificationCode(
     }),
   ]);
 
+  // Davet edenin ödül kademesini yeniden hesapla (akış bozulmasın diye izole).
+  try {
+    const { recomputeReferralRewards } = await import("@/lib/services/referral");
+    await recomputeReferralRewards(userId);
+  } catch (e) {
+    console.error("[referral] ödül hesaplama başarısız:", e);
+  }
+
   return { ok: true };
 }

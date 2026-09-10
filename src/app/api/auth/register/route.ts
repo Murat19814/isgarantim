@@ -5,6 +5,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { registerSchema, normalizePhone } from "@/lib/validations/auth";
 import { issueVerificationCode } from "@/lib/auth/verification";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { ensureReferralCode, applyReferralOnRegister } from "@/lib/services/referral";
 
 export async function POST(req: Request) {
   const rl = rateLimit(`register:${clientIp(req)}`, 5, 10 * 60_000);
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { fullName, email, phone, password, roles } = parsed.data;
+  const { fullName, email, phone, password, roles, referralCode } = parsed.data;
   const normEmail = email.toLowerCase();
   const normPhone = normalizePhone(phone);
 
@@ -63,6 +64,12 @@ export async function POST(req: Request) {
         : {}),
     },
   });
+
+  // Davet kodu üret + (varsa) davet edeni ata (anti-fraud servis içinde)
+  await ensureReferralCode(user.id).catch(() => null);
+  if (referralCode) {
+    await applyReferralOnRegister(user.id, referralCode).catch(() => null);
+  }
 
   // Doğrulama kodlarını gönder (e-posta + telefon)
   await Promise.all([

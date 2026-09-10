@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ClipboardList, Wallet, Gavel,
-  Briefcase, Tags, Flag, ShieldCheck, ShieldAlert, Star, ExternalLink,
+  Briefcase, Tags, Flag, ShieldCheck, ShieldAlert, Star, BarChart3, ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/admin", label: "Genel Bakış", icon: LayoutDashboard, exact: true },
+  { href: "/admin/istatistik", label: "İstatistikler", icon: BarChart3 },
   { href: "/admin/kullanicilar", label: "Kullanıcılar", icon: Users },
   { href: "/admin/talepler", label: "Hizmet Talepleri", icon: ClipboardList },
   { href: "/admin/odemeler", label: "Ödemeler", icon: Wallet },

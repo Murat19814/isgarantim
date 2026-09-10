@@ -11,6 +11,110 @@ import { prisma } from "@/lib/prisma";
 export class AdminError extends Error {}
 
 // ─────────────────────────────────────────────
+// GELİŞMİŞ İSTATİSTİKLER
+// ─────────────────────────────────────────────
+
+export async function getAdvancedStats() {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const [
+    newUsers30,
+    newRequests30,
+    completed30,
+    byStatus,
+    byCategory,
+    byCity,
+    topProviders,
+    totalReferred,
+    founders,
+    topInvitersRaw,
+  ] = await Promise.all([
+    prisma.user.count({ where: { createdAt: { gte: since } } }),
+    prisma.serviceRequest.count({ where: { createdAt: { gte: since } } }),
+    prisma.serviceRequest.count({
+      where: { status: ServiceRequestStatus.COMPLETED, completedAt: { gte: since } },
+    }),
+    prisma.serviceRequest.groupBy({ by: ["status"], _count: true }),
+    prisma.serviceRequest.groupBy({
+      by: ["categoryId"],
+      _count: true,
+      orderBy: { _count: { categoryId: "desc" } },
+      take: 8,
+    }),
+    prisma.serviceRequest.groupBy({
+      by: ["city"],
+      _count: true,
+      orderBy: { _count: { city: "desc" } },
+      take: 8,
+    }),
+    prisma.providerProfile.findMany({
+      orderBy: [{ completedJobs: "desc" }, { ratingAvg: "desc" }],
+      take: 10,
+      select: {
+        completedJobs: true,
+        ratingAvg: true,
+        ratingCount: true,
+        user: { select: { id: true, fullName: true, isFounder: true } },
+      },
+    }),
+    prisma.user.count({ where: { referredById: { not: null } } }),
+    prisma.user.count({ where: { isFounder: true } }),
+    prisma.user.groupBy({
+      by: ["referredById"],
+      where: { referredById: { not: null } },
+      _count: true,
+      orderBy: { _count: { referredById: "desc" } },
+      take: 8,
+    }),
+  ]);
+
+  // Kategori adlarını çöz
+  const catIds = byCategory.map((c) => c.categoryId);
+  const cats = await prisma.serviceCategory.findMany({
+    where: { id: { in: catIds } },
+    select: { id: true, name: true },
+  });
+  const catName = new Map(cats.map((c) => [c.id, c.name]));
+
+  // En çok davet edenlerin adlarını çöz
+  const inviterIds = topInvitersRaw.map((r) => r.referredById!).filter(Boolean);
+  const inviters = await prisma.user.findMany({
+    where: { id: { in: inviterIds } },
+    select: { id: true, fullName: true, isFounder: true },
+  });
+  const inviterName = new Map(inviters.map((u) => [u.id, u]));
+
+  return {
+    newUsers30,
+    newRequests30,
+    completed30,
+    byStatus: byStatus.map((s) => ({ status: s.status as string, count: s._count })),
+    byCategory: byCategory.map((c) => ({
+      name: catName.get(c.categoryId) ?? "?",
+      count: c._count,
+    })),
+    byCity: byCity.map((c) => ({ city: c.city, count: c._count })),
+    topProviders: topProviders.map((p) => ({
+      id: p.user.id,
+      name: p.user.fullName,
+      isFounder: p.user.isFounder,
+      completedJobs: p.completedJobs,
+      ratingAvg: p.ratingAvg,
+      ratingCount: p.ratingCount,
+    })),
+    referral: {
+      totalReferred,
+      founders,
+      topInviters: topInvitersRaw.map((r) => ({
+        name: inviterName.get(r.referredById!)?.fullName ?? "?",
+        isFounder: inviterName.get(r.referredById!)?.isFounder ?? false,
+        count: r._count,
+      })),
+    },
+  };
+}
+
+// ─────────────────────────────────────────────
 // DASHBOARD İSTATİSTİKLERİ
 // ─────────────────────────────────────────────
 

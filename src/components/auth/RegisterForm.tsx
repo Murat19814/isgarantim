@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, HandHelping, Wrench, Briefcase, Building2 } from "lucide-react";
+import { Loader2, HandHelping, Wrench, Briefcase, Building2, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ROLE_OPTIONS = [
@@ -18,6 +18,13 @@ export function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Davet linkinden gelen kodu (?ref=...) yakala.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) setReferralCode(ref.trim().toUpperCase());
+  }, []);
 
   function toggleRole(value: string) {
     setRoles((prev) =>
@@ -38,6 +45,7 @@ export function RegisterForm() {
       phone: String(form.get("phone") ?? ""),
       password: String(form.get("password") ?? ""),
       roles,
+      ...(referralCode ? { referralCode } : {}),
     };
 
     try {
@@ -63,6 +71,11 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {referralCode && (
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <Gift className="h-4 w-4" /> Bir davetle geldin — kod: <b>{referralCode}</b>
+        </div>
+      )}
       {error && (
         <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
