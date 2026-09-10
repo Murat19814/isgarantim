@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2, Wand2, Sparkles,
+  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2, Wand2, Sparkles, RotateCcw,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -42,15 +42,23 @@ export function ServiceRequestWizard({
   const [photoInput, setPhotoInput] = useState("");
   const [videos, setVideos] = useState<string[]>([]);
   const [voiceNote, setVoiceNote] = useState<string>("");
+  const [invitedProviderId, setInvitedProviderId] = useState<string>("");
+  const [invitedName, setInvitedName] = useState<string>("");
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
-  // Hızlı modlar: /panel/hizmet-al/yeni?urgency=URGENT (aynı gün) vb.
+  // Hızlı modlar + Tekrar çağır: ?urgency= / ?provider= / ?category= / ?providerName=
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const u = sp.get("urgency");
     if (u === "URGENT" || u === "THIS_WEEK") setUrgency(u);
-  }, []);
+    const prov = sp.get("provider");
+    if (prov) setInvitedProviderId(prov);
+    const name = sp.get("providerName");
+    if (name) setInvitedName(name);
+    const cat = sp.get("category");
+    if (cat && categories.some((c) => c.id === cat)) setCategoryId(cat);
+  }, [categories]);
 
   function canProceed(): boolean {
     if (step === 0) return !!categoryId;
@@ -96,6 +104,7 @@ export function ServiceRequestWizard({
       photos,
       videos,
       voiceNote: voiceNote || undefined,
+      invitedProviderId: invitedProviderId || undefined,
     };
     try {
       const res = await fetch("/api/service-requests", {
@@ -118,6 +127,15 @@ export function ServiceRequestWizard({
 
   return (
     <div className="card p-6 sm:p-8">
+      {invitedProviderId && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <RotateCcw className="h-4 w-4 shrink-0" />
+          <span>
+            {invitedName ? <b>{invitedName}</b> : "Bir ustayı"} tekrar çağırıyorsun. Talebini
+            oluştur; usta özel olarak bilgilendirilecek ve teklif verebilecek.
+          </span>
+        </div>
+      )}
       {/* Adım göstergesi */}
       <ol className="mb-8 flex items-center gap-2">
         {STEPS.map((label, i) => (

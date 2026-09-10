@@ -80,10 +80,11 @@ export async function getPublicProviderProfile(userId: string) {
   });
   if (!profile) return null;
 
-  const [badges, reviews, repeatRate, criteriaAgg] = await Promise.all([
+  const [badges, reviews, repeatRate, neighborStats, criteriaAgg] = await Promise.all([
     getUserBadges(userId),
     listReviewsForProvider(userId, 10),
     computeRepeatRate(userId),
+    getNeighborhoodStats(userId),
     prisma.review.aggregate({
       where: { targetId: userId, isHidden: false },
       _avg: {
@@ -96,7 +97,36 @@ export async function getPublicProviderProfile(userId: string) {
     }),
   ]);
 
-  return { profile, badges, reviews, repeatRate, criteriaAvg: criteriaAgg._avg };
+  return { profile, badges, reviews, repeatRate, neighborStats, criteriaAvg: criteriaAgg._avg };
+}
+
+/**
+ * "Komşum kullandı": son 30 günde tamamlanan işlerin ilçe bazlı özeti.
+ * Tam adres GÖSTERİLMEZ; yalnızca ilçe/şehir ve iş sayısı.
+ */
+export async function getNeighborhoodStats(providerId: string) {
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+
+  const completed = await prisma.serviceRequest.findMany({
+    where: {
+      status: ServiceRequestStatus.COMPLETED,
+      completedAt: { gte: since },
+      payment: { providerId },
+    },
+    select: { city: true, district: true },
+  });
+
+  if (completed.length === 0) return { total: 0, topArea: null as string | null };
+
+  const counts = new Map<string, number>();
+  for (const r of completed) {
+    const area = r.district || r.city;
+    if (!area) continue;
+    counts.set(area, (counts.get(area) ?? 0) + 1);
+  }
+  const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+  return { total: completed.length, topArea: top ? top[0] : null };
 }
 
 const WEEKDAY_KEYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];

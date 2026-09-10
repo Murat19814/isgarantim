@@ -7,6 +7,7 @@ import {
   listOpenRequests,
 } from "@/lib/services/serviceRequests";
 import { notifyMatchingProviders } from "@/lib/services/matching";
+import { notify } from "@/lib/services/notifications";
 
 /** GET ?scope=mine (müşteri talepleri) | open (hizmet verenler için açık talepler) */
 export async function GET(req: Request) {
@@ -41,6 +42,16 @@ export async function POST(req: Request) {
   }
 
   const request = await createServiceRequest(user.id, parsed.data);
+
+  // "Tekrar çağır": davet edilen ustaya özel bildirim.
+  if (parsed.data.invitedProviderId && parsed.data.invitedProviderId !== user.id) {
+    notify(parsed.data.invitedProviderId, {
+      type: "RECALL_INVITE",
+      title: "Bir müşteri seni tekrar çağırdı 🎯",
+      body: "Daha önce çalıştığın bir müşteri yeni bir talep açtı ve seni davet etti. Teklif verebilirsin.",
+      link: `/panel/hizmet-ver`,
+    }).catch(() => {});
+  }
 
   // Eşleşen hizmet verenlere bildirim (akış bozulmasın diye hata yutulur).
   notifyMatchingProviders(request.id).catch((e) =>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, MapPin, Calendar, Wallet } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Wallet, RotateCcw } from "lucide-react";
 import { auth } from "@/lib/auth/session";
 import {
   getRequestWithOffers,
@@ -214,6 +214,21 @@ export default async function Page({ params }: { params: { id: string } }) {
             after={request.afterPhotos ?? []}
             editable={false}
           />
+        </div>
+      )}
+
+      {workflow?.status === "COMPLETED" && winner && (
+        <div className="mt-6 flex flex-col items-start justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2 text-sm text-navy-700">
+            <RotateCcw className="h-5 w-5 text-emerald-600" />
+            <span>Memnun kaldıysan <b>{winner.provider.fullName}</b> ile tekrar çalışabilirsin.</span>
+          </div>
+          <Link
+            href={`/panel/hizmet-al/yeni?provider=${winner.provider.id}&providerName=${encodeURIComponent(winner.provider.fullName)}&category=${request.category.id}`}
+            className="btn-primary shrink-0 text-sm"
+          >
+            <RotateCcw className="h-4 w-4" /> Tekrar hizmet al
+          </Link>
         </div>
       )}
 

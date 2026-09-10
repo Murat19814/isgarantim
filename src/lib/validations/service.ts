@@ -19,6 +19,7 @@ export const serviceRequestSchema = z
     photos: z.array(mediaUrl).max(8, "En fazla 8 fotoğraf.").default([]),
     videos: z.array(mediaUrl).max(4, "En fazla 4 video.").default([]),
     voiceNote: mediaUrl.optional().or(z.literal("").transform(() => undefined)),
+    invitedProviderId: z.string().optional(),
   })
   .refine(
     (d) => !d.budgetMin || !d.budgetMax || d.budgetMax >= d.budgetMin,

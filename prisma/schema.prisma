@@ -392,6 +392,7 @@ model ServiceRequest {
   urgency     RequestUrgency  @default(FLEXIBLE)
   locationType RequestLocation @default(ONSITE)
   contactPreference RequestContact @default(PLATFORM)
+  invitedProviderId String? // "Tekrar çağır" ile davet edilen hizmet veren
   status      ServiceRequestStatus @default(OPEN)
   // 1. yıl emanetsiz akış alanları
   scheduledAt DateTime? // Kararlaştırılan randevu tarihi
@@ -413,6 +414,7 @@ model ServiceRequest {
   @@index([categoryId])
   @@index([city])
   @@index([status])
+  @@index([invitedProviderId])
 }
 
 // ─────────────────────────────────────────────

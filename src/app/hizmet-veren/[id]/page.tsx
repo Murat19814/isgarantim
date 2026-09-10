@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock, Award, Zap,
+  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock, Award, Zap, RotateCcw,
 } from "lucide-react";
 import { WEEKDAYS } from "@/lib/validations/profile";
 import { Navbar } from "@/components/Navbar";
@@ -23,7 +24,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   const favorited =
     viewerId && viewerId !== params.id ? await isFavorited(viewerId, params.id) : false;
 
-  const { profile, badges, reviews, repeatRate, criteriaAvg } = data;
+  const { profile, badges, reviews, repeatRate, neighborStats, criteriaAvg } = data;
   const p = profile;
 
   return (
@@ -64,13 +65,27 @@ export default async function Page({ params }: { params: { id: string } }) {
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <VerificationBadges badges={badges} size="md" />
               {viewerId !== params.id && (
-                <FavoriteButton
-                  providerId={params.id}
-                  initialFavorited={favorited}
-                  canFavorite={!!viewerId}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/panel/hizmet-al/yeni?provider=${params.id}&providerName=${encodeURIComponent(p.user.fullName)}${p.categories?.[0]?.id ? `&category=${p.categories[0].id}` : ""}`}
+                    className="btn-primary text-sm"
+                  >
+                    <RotateCcw className="h-4 w-4" /> Bu ustadan hizmet al
+                  </Link>
+                  <FavoriteButton
+                    providerId={params.id}
+                    initialFavorited={favorited}
+                    canFavorite={!!viewerId}
+                  />
+                </div>
               )}
             </div>
+            {neighborStats.total > 0 && neighborStats.topArea && (
+              <p className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
+                <MapPin className="h-4 w-4" />
+                Son 30 günde <b>{neighborStats.topArea}</b> bölgesinde {neighborStats.total} doğrulanmış iş tamamladı
+              </p>
+            )}
 
             {/* İstatistikler */}
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

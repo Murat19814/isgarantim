@@ -55,6 +55,7 @@ export async function createServiceRequest(
       photos: input.photos ?? [],
       videos: input.videos ?? [],
       voiceNote: input.voiceNote,
+      invitedProviderId: input.invitedProviderId || null,
       status: ServiceRequestStatus.OPEN,
     },
   });

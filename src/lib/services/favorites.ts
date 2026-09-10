@@ -49,6 +49,7 @@ export async function listFavorites(userId: string) {
               ratingAvg: true,
               ratingCount: true,
               completedJobs: true,
+              categories: { select: { id: true, name: true }, take: 1 },
             },
           },
         },
