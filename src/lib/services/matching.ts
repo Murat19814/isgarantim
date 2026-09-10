@@ -75,6 +75,52 @@ async function dispatchExternalMatches(userIds: string[], title: string) {
 }
 
 /**
+ * Acil yardım talebi: SADECE aynı şehirdeki, o kategoride ve aynı gün müsait
+ * hizmet verenlere öncelikli "acil" bildirimi gönderir.
+ */
+export async function notifyEmergencyProviders(requestId: string) {
+  const request = await prisma.serviceRequest.findUnique({
+    where: { id: requestId },
+    select: {
+      id: true,
+      title: true,
+      city: true,
+      customerId: true,
+      category: { select: { id: true, name: true, parentId: true } },
+    },
+  });
+  if (!request) return;
+
+  const topCatId = request.category.parentId ?? request.category.id;
+
+  const profiles = await prisma.providerProfile.findMany({
+    where: {
+      categories: { some: { id: topCatId } },
+      sameDayAvailable: true,
+      ...(request.city ? { city: request.city } : {}),
+      user: { isActive: true, isBanned: false },
+    },
+    select: { userId: true },
+    take: 200,
+  });
+
+  const targets = profiles
+    .map((p) => p.userId)
+    .filter((id) => id !== request.customerId);
+  if (targets.length === 0) return;
+
+  await notifyMany(targets, {
+    type: "EMERGENCY_REQUEST",
+    title: "🚨 Acil yardım talebi!",
+    body: `${request.category.name}${request.city ? ` · ${request.city}` : ""}: "${request.title}" — hemen teklif verebilirsin.`,
+    link: "/panel/hizmet-ver",
+  });
+
+  // Acil durumlarda harici kanallar da (varsa) tetiklenir.
+  await dispatchExternalMatches(targets, request.title).catch(() => {});
+}
+
+/**
  * Hizmet verene önerilen açık talepler (kategori + şehir + bütçe skoruna göre).
  * Kendi talepleri ve zaten teklif verdikleri hariç.
  */

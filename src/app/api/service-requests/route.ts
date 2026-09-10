@@ -6,7 +6,7 @@ import {
   listCustomerRequests,
   listOpenRequests,
 } from "@/lib/services/serviceRequests";
-import { notifyMatchingProviders } from "@/lib/services/matching";
+import { notifyMatchingProviders, notifyEmergencyProviders } from "@/lib/services/matching";
 import { notify } from "@/lib/services/notifications";
 
 /** GET ?scope=mine (müşteri talepleri) | open (hizmet verenler için açık talepler) */
@@ -51,6 +51,13 @@ export async function POST(req: Request) {
       body: "Daha önce çalıştığın bir müşteri yeni bir talep açtı ve seni davet etti. Teklif verebilirsin.",
       link: `/panel/hizmet-ver`,
     }).catch(() => {});
+  }
+
+  // Acil talep: aynı gün müsait + yakın ustalara öncelikli bildirim.
+  if (parsed.data.isEmergency) {
+    notifyEmergencyProviders(request.id).catch((e) =>
+      console.error("[notifyEmergencyProviders] başarısız:", e),
+    );
   }
 
   // Eşleşen hizmet verenlere bildirim (akış bozulmasın diye hata yutulur).

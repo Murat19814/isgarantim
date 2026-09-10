@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck, UserCog, Target, Mic, Video, ImagePlus } from "lucide-react";
+import { Plus, Loader2, MapPin, Users, X, Gift, Pencil, CheckCircle2, ShieldCheck, UserCog, Target, Mic, Video, ImagePlus, Siren } from "lucide-react";
 import { formatTRY } from "@/lib/utils";
 import { MAX_OFFERS_PER_REQUEST } from "@/lib/constants";
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -30,6 +30,7 @@ type OpenRequest = {
   offerCount: number;
   budgetMin: number | null;
   budgetMax: number | null;
+  isEmergency?: boolean;
   recommended?: boolean;
   matchReasons?: string[] | null;
   myOffer: MyOffer | null;
@@ -81,11 +82,16 @@ export function ProviderDashboard({ requests }: { requests: OpenRequest[] }) {
               const full = !r.myOffer && r.offerCount >= MAX_OFFERS_PER_REQUEST;
               const open = offerFor === r.id;
               return (
-                <div key={r.id} className={r.recommended ? "card p-5 ring-2 ring-emerald-200" : "card p-5"}>
+                <div key={r.id} className={r.isEmergency ? "card p-5 ring-2 ring-red-300" : r.recommended ? "card p-5 ring-2 ring-emerald-200" : "card p-5"}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="badge-navy">{r.categoryName}</span>
+                        {r.isEmergency && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                            <Siren className="h-3 w-3" /> Acil
+                          </span>
+                        )}
                         {r.recommended && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                             <Target className="h-3 w-3" /> Sana uygun

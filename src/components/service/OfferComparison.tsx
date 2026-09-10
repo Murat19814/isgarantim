@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { VerificationBadges } from "@/components/VerificationBadges";
+import { LEVEL_LABELS } from "@/lib/levels";
 
 type Offer = {
   id: string;
@@ -38,6 +39,8 @@ type Offer = {
       headline: string | null;
       experienceYears: number | null;
       city: string | null;
+      trustScore: number;
+      level: string;
     } | null;
   };
 };
@@ -140,6 +143,11 @@ export function OfferComparison({
                       )}
                     </div>
                     <p className="text-xs text-navy-400">{p?.headline ?? "Hizmet Veren"}</p>
+                    {p && p.level !== "NEW" && (
+                      <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-navy-800 px-2 py-0.5 text-[10px] font-semibold text-gold-400">
+                        {LEVEL_LABELS[p.level] ?? "Profesyonel"}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">

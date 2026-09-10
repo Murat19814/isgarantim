@@ -268,6 +268,8 @@ model ProviderProfile {
   ratingCount    Int      @default(0)
   completedJobs  Int      @default(0)
   avgResponseMin Int? // Ortalama yanıt süresi (dk)
+  trustScore     Int      @default(0) // Güven puanı (0-100, hesaplanır)
+  level          String   @default("NEW") // Başarı seviyesi (kazanılır)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -393,6 +395,7 @@ model ServiceRequest {
   locationType RequestLocation @default(ONSITE)
   contactPreference RequestContact @default(PLATFORM)
   invitedProviderId String? // "Tekrar çağır" ile davet edilen hizmet veren
+  isEmergency Boolean         @default(false) // Acil yardım talebi
   status      ServiceRequestStatus @default(OPEN)
   // 1. yıl emanetsiz akış alanları
   scheduledAt DateTime? // Kararlaştırılan randevu tarihi

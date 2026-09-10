@@ -122,6 +122,10 @@ export async function createReview(
     link: `/panel/hizmet-ver/${requestId}`,
   });
 
+  // Güven puanı + seviyeyi güncelle (akışı bozmaz)
+  const { recomputeTrust } = await import("@/lib/services/trust");
+  await recomputeTrust(providerId);
+
   return created;
 }
 

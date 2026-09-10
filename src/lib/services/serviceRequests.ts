@@ -56,6 +56,7 @@ export async function createServiceRequest(
       videos: input.videos ?? [],
       voiceNote: input.voiceNote,
       invitedProviderId: input.invitedProviderId || null,
+      isEmergency: input.isEmergency ?? false,
       status: ServiceRequestStatus.OPEN,
     },
   });
@@ -234,6 +235,8 @@ export async function getRequestWithOffers(requestId: string) {
                   headline: true,
                   experienceYears: true,
                   city: true,
+                  trustScore: true,
+                  level: true,
                 },
               },
             },

@@ -72,6 +72,7 @@ export default async function Page() {
         offerCount: r._count.offers,
         budgetMin: r.budgetMin,
         budgetMax: r.budgetMax,
+        isEmergency: r.isEmergency,
         recommended: !!matchReasons,
         matchReasons,
         myOffer: mine
@@ -90,8 +91,12 @@ export default async function Page() {
           : null,
       };
     })
-    // Önerilenleri öne al
-    .sort((a, b) => Number(b.recommended) - Number(a.recommended));
+    // Acil + önerilenleri öne al
+    .sort(
+      (a, b) =>
+        Number(b.isEmergency) - Number(a.isEmergency) ||
+        Number(b.recommended) - Number(a.recommended),
+    );
 
   return (
     <div>

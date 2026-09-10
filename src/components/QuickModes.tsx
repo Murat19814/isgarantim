@@ -1,13 +1,20 @@
 import Link from "next/link";
-import { Zap, MapPin, Mic, TrendingUp, Heart, ArrowRight } from "lucide-react";
+import { Zap, MapPin, Mic, TrendingUp, Heart, ArrowRight, Siren } from "lucide-react";
 
 const MODES = [
+  {
+    href: "/acil",
+    icon: Siren,
+    title: "Acil yardım",
+    desc: "Çilingir, su kaçağı, elektrik... hemen çağır.",
+    tone: "text-red-600 bg-red-50",
+  },
   {
     href: "/panel/hizmet-al/yeni?urgency=URGENT",
     icon: Zap,
     title: "Aynı gün hizmet",
     desc: "Acil işini bugün yaptır, hızlı teklif al.",
-    tone: "text-red-600 bg-red-50",
+    tone: "text-gold-600 bg-gold-50",
   },
   {
     href: "/panel/hizmet-al/yeni",

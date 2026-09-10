@@ -7,6 +7,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { APPROVAL_WINDOW_DAYS } from "@/lib/constants";
 import { notify } from "@/lib/services/notifications";
+import { recomputeTrust } from "@/lib/services/trust";
 import type {
   DeliverWorkInput,
   ProblemReportInput,
@@ -225,6 +226,9 @@ export async function approveByCustomer(customerId: string, requestId: string) {
     body: `"${request.title}" işini müşteri onayladı.`,
     link: `/panel/hizmet-ver/${requestId}`,
   });
+
+  // Güven puanı + seviyeyi güncelle (akışı bozmaz)
+  await recomputeTrust(providerId);
 
   return { ok: true };
 }

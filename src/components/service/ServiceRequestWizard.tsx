@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2, Wand2, Sparkles, RotateCcw,
+  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2, Wand2, Sparkles, RotateCcw, Zap,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -44,6 +44,7 @@ export function ServiceRequestWizard({
   const [voiceNote, setVoiceNote] = useState<string>("");
   const [invitedProviderId, setInvitedProviderId] = useState<string>("");
   const [invitedName, setInvitedName] = useState<string>("");
+  const [isEmergency, setIsEmergency] = useState(false);
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
@@ -58,6 +59,12 @@ export function ServiceRequestWizard({
     if (name) setInvitedName(name);
     const cat = sp.get("category");
     if (cat && categories.some((c) => c.id === cat)) setCategoryId(cat);
+    if (sp.get("emergency") === "1") {
+      setIsEmergency(true);
+      setUrgency("URGENT");
+    }
+    const t = sp.get("title");
+    if (t) setTitle(t.slice(0, 120));
   }, [categories]);
 
   function canProceed(): boolean {
@@ -105,6 +112,7 @@ export function ServiceRequestWizard({
       videos,
       voiceNote: voiceNote || undefined,
       invitedProviderId: invitedProviderId || undefined,
+      isEmergency,
     };
     try {
       const res = await fetch("/api/service-requests", {
@@ -127,6 +135,12 @@ export function ServiceRequestWizard({
 
   return (
     <div className="card p-6 sm:p-8">
+      {isEmergency && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <Zap className="h-4 w-4 shrink-0" />
+          Acil yardım talebi oluşturuyorsun. Talebin, bölgendeki aynı gün müsait ustalara anında iletilecek.
+        </div>
+      )}
       {invitedProviderId && (
         <div className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           <RotateCcw className="h-4 w-4 shrink-0" />

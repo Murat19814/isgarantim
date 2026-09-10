@@ -7,6 +7,7 @@ import { WEEKDAYS } from "@/lib/validations/profile";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { VerificationBadges } from "@/components/VerificationBadges";
+import { TrustScoreCard } from "@/components/TrustScoreCard";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { getPublicProviderProfile } from "@/lib/services/providerProfile";
 import { isFavorited } from "@/lib/services/favorites";
@@ -24,7 +25,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   const favorited =
     viewerId && viewerId !== params.id ? await isFavorited(viewerId, params.id) : false;
 
-  const { profile, badges, reviews, repeatRate, neighborStats, criteriaAvg } = data;
+  const { profile, badges, reviews, repeatRate, neighborStats, trust, criteriaAvg } = data;
   const p = profile;
 
   return (
@@ -186,6 +187,7 @@ export default async function Page({ params }: { params: { id: string } }) {
 
           {/* Sağ: bilgiler */}
           <aside className="space-y-6">
+            <TrustScoreCard score={trust.score} levelLabel={trust.level.label} factors={trust.factors} />
             <section className="card p-6">
               <h2 className="mb-3 font-display text-lg font-bold text-navy-900">Bilgiler</h2>
               <ul className="space-y-2 text-sm text-navy-600">

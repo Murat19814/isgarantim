@@ -74,17 +74,21 @@ export async function getPublicProviderProfile(userId: string) {
       ratingCount: true,
       completedJobs: true,
       avgResponseMin: true,
+      trustScore: true,
+      level: true,
       categories: { select: { id: true, name: true } },
       user: { select: { id: true, fullName: true, avatarUrl: true, createdAt: true, isFounder: true } },
     },
   });
   if (!profile) return null;
 
-  const [badges, reviews, repeatRate, neighborStats, criteriaAgg] = await Promise.all([
+  const { computeTrustScore } = await import("@/lib/services/trust");
+  const [badges, reviews, repeatRate, neighborStats, trust, criteriaAgg] = await Promise.all([
     getUserBadges(userId),
     listReviewsForProvider(userId, 10),
     computeRepeatRate(userId),
     getNeighborhoodStats(userId),
+    computeTrustScore(userId),
     prisma.review.aggregate({
       where: { targetId: userId, isHidden: false },
       _avg: {
@@ -97,7 +101,7 @@ export async function getPublicProviderProfile(userId: string) {
     }),
   ]);
 
-  return { profile, badges, reviews, repeatRate, neighborStats, criteriaAvg: criteriaAgg._avg };
+  return { profile, badges, reviews, repeatRate, neighborStats, trust, criteriaAvg: criteriaAgg._avg };
 }
 
 /**

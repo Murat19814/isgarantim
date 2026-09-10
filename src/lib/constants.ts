@@ -105,6 +105,16 @@ export const SERVICE_CATEGORIES = [
   { slug: "organizasyon", name: "Organizasyon", icon: "PartyPopper", sub: ["Düğün", "Doğum Günü", "Catering"] },
 ] as const;
 
+/** Acil yardım tipleri — hızlı erişim. matchSlug ile hizmet kategorisine bağlanır. */
+export const EMERGENCY_TYPES = [
+  { key: "cilingir", label: "Çilingir", icon: "KeyRound", matchSlug: "tadilat-tamir" },
+  { key: "su-kacagi", label: "Su kaçağı", icon: "Droplets", matchSlug: "tesisat" },
+  { key: "elektrik", label: "Elektrik arızası", icon: "Zap", matchSlug: "elektrik" },
+  { key: "kombi", label: "Kombi arızası", icon: "Flame", matchSlug: "tesisat" },
+  { key: "cam", label: "Cam kırılması", icon: "Square", matchSlug: "tadilat-tamir" },
+  { key: "arac", label: "Yolda kalan araç", icon: "Car", matchSlug: "tadilat-tamir" },
+] as const;
+
 /** İş ilanı kategorileri (İş Ara / İş İlanı Ver tarafı) — hizmetten AYRI */
 export const JOB_CATEGORIES = [
   { slug: "satis-pazarlama", name: "Satış & Pazarlama", icon: "TrendingUp" },
