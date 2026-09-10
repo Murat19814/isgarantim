@@ -8,7 +8,7 @@ import { rateLimit, clientIp } from "@/lib/rate-limit";
 // Diske yazacağımız için Node runtime şart (Edge değil).
 export const runtime = "nodejs";
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB (ses/video için)
 const ALLOWED: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/jpg": "jpg",
@@ -16,6 +16,18 @@ const ALLOWED: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
   "application/pdf": "pdf",
+  // Sesli mesaj / ses kayıtları
+  "audio/webm": "weba",
+  "audio/ogg": "ogg",
+  "audio/mpeg": "mp3",
+  "audio/mp4": "m4a",
+  "audio/x-m4a": "m4a",
+  "audio/wav": "wav",
+  "audio/x-wav": "wav",
+  "audio/aac": "aac",
+  // Kısa video
+  "video/mp4": "mp4",
+  "video/webm": "webm",
 };
 
 /**

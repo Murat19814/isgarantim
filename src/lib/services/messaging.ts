@@ -73,6 +73,80 @@ async function assertParticipant(conversationId: string, userId: string) {
   return p;
 }
 
+/** Konuşmadaki diğer katılımcının id'sini döndürür. */
+async function getOtherParticipantId(conversationId: string, userId: string) {
+  const other = await prisma.conversationParticipant.findFirst({
+    where: { conversationId, userId: { not: userId } },
+    select: { userId: true },
+  });
+  return other?.userId ?? null;
+}
+
+/** İki kullanıcı arasında (herhangi bir yönde) engel var mı? */
+async function getBlockState(aId: string, bId: string) {
+  const blocks = await prisma.userBlock.findMany({
+    where: {
+      OR: [
+        { blockerId: aId, blockedId: bId },
+        { blockerId: bId, blockedId: aId },
+      ],
+    },
+    select: { blockerId: true },
+  });
+  return {
+    blockedByMe: blocks.some((x) => x.blockerId === aId),
+    blockedByOther: blocks.some((x) => x.blockerId === bId),
+  };
+}
+
+/** Karşı tarafı engelle. */
+export async function blockConversationPeer(
+  userId: string,
+  conversationId: string,
+  reason?: string,
+) {
+  await assertParticipant(conversationId, userId);
+  const otherId = await getOtherParticipantId(conversationId, userId);
+  if (!otherId) throw new MessagingError("Karşı taraf bulunamadı.");
+
+  await prisma.userBlock.upsert({
+    where: { blockerId_blockedId: { blockerId: userId, blockedId: otherId } },
+    update: { reason: reason ?? null },
+    create: { blockerId: userId, blockedId: otherId, reason: reason ?? null },
+  });
+  return { ok: true };
+}
+
+/** Engeli kaldır. */
+export async function unblockConversationPeer(
+  userId: string,
+  conversationId: string,
+) {
+  await assertParticipant(conversationId, userId);
+  const otherId = await getOtherParticipantId(conversationId, userId);
+  if (!otherId) throw new MessagingError("Karşı taraf bulunamadı.");
+
+  await prisma.userBlock
+    .delete({
+      where: { blockerId_blockedId: { blockerId: userId, blockedId: otherId } },
+    })
+    .catch(() => null);
+  return { ok: true };
+}
+
+/** Metinde platform dışı iletişim paylaşımı var mı? (tel/e-posta) */
+function containsContactInfo(text: string | null | undefined): boolean {
+  if (!text) return false;
+  return (
+    /[\w.+-]+@[\w-]+\.[\w.-]{2,}/.test(text) ||
+    /(\+?\d[\d\s().-]{8,}\d)/.test(text)
+  );
+}
+
+const CONTACT_WARNING =
+  "⚠️ Güvenliğin için iletişim ve ödeme her zaman uygulama içinde kalsın. " +
+  "Telefon/adres, randevu oluşturulunca otomatik açılır. Platform dışına çıkmak dolandırıcılık riskini artırır.";
+
 /** Konuşmadaki mesajları döndürür (iletişim kilitliyse maskelenmiş). */
 export async function listMessages(userId: string, conversationId: string) {
   await assertParticipant(conversationId, userId);
@@ -83,6 +157,11 @@ export async function listMessages(userId: string, conversationId: string) {
   });
   const unlocked = convo?.contactUnlocked ?? false;
 
+  const otherId = await getOtherParticipantId(conversationId, userId);
+  const block = otherId
+    ? await getBlockState(userId, otherId)
+    : { blockedByMe: false, blockedByOther: false };
+
   const messages = await prisma.message.findMany({
     where: { conversationId },
     orderBy: { createdAt: "asc" },
@@ -91,6 +170,8 @@ export async function listMessages(userId: string, conversationId: string) {
 
   return {
     contactUnlocked: unlocked,
+    blockedByMe: block.blockedByMe,
+    blockedByOther: block.blockedByOther,
     messages: messages.map((m) => ({
       id: m.id,
       body:
@@ -112,6 +193,18 @@ export async function sendMessage(
 ) {
   await assertParticipant(conversationId, userId);
 
+  // Engelleme kontrolü — herhangi bir yönde engel varsa mesaj gönderilemez.
+  const otherId = await getOtherParticipantId(conversationId, userId);
+  if (otherId) {
+    const block = await getBlockState(userId, otherId);
+    if (block.blockedByMe)
+      throw new MessagingError(
+        "Bu kişiyi engelledin. Mesajlaşmak için engeli kaldırmalısın.",
+      );
+    if (block.blockedByOther)
+      throw new MessagingError("Bu kişiye şu an mesaj gönderemezsin.");
+  }
+
   const message = await prisma.message.create({
     data: {
       conversationId,
@@ -125,6 +218,28 @@ export async function sendMessage(
     where: { conversationId_userId: { conversationId, userId } },
     data: { lastReadAt: new Date() },
   });
+
+  // Otomatik uyarı: iletişim kilitliyken tel/e-posta paylaşımı denenirse
+  // sistem mesajı ekle (arka arkaya tekrar etmesin diye son mesaja bakılır).
+  const convoUnlocked = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { contactUnlocked: true },
+  });
+  if (!convoUnlocked?.contactUnlocked && containsContactInfo(input.body)) {
+    const lastSystem = await prisma.message.findFirst({
+      where: { conversationId, isSystem: true },
+      orderBy: { createdAt: "desc" },
+      select: { body: true, createdAt: true },
+    });
+    const recent =
+      lastSystem?.body === CONTACT_WARNING &&
+      Date.now() - new Date(lastSystem.createdAt).getTime() < 5 * 60_000;
+    if (!recent) {
+      await prisma.message.create({
+        data: { conversationId, senderId: userId, body: CONTACT_WARNING, isSystem: true },
+      });
+    }
+  }
 
   // Diğer katılımcı(lar)a bildirim
   const convo = await prisma.conversation.findUnique({
