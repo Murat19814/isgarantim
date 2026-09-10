@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, MapPin, Briefcase } from "lucide-react";
 import { auth } from "@/lib/auth/session";
-import { getOrCreateWallet } from "@/lib/services/credits";
+import { prisma } from "@/lib/prisma";
 import {
   listOpenRequests,
   listProviderActiveJobs,
@@ -24,16 +24,36 @@ export default async function Page() {
   const session = await auth();
   if (!session?.user) redirect("/giris?callbackUrl=/panel/hizmet-ver");
 
-  const [wallet, openRequests, activeJobs] = await Promise.all([
-    getOrCreateWallet(session.user.id),
+  const [openRequests, activeJobs] = await Promise.all([
     listOpenRequests(),
     listProviderActiveJobs(session.user.id),
   ]);
 
   // Kendi taleplerini listeden çıkar
-  const requests = openRequests
-    .filter((r) => r.customerId !== session.user.id)
-    .map((r) => ({
+  const visible = openRequests.filter((r) => r.customerId !== session.user.id);
+
+  // Bu kullanıcının bu taleplere verdiği mevcut teklifler (güncelleme için)
+  const myOffers = await prisma.offer.findMany({
+    where: {
+      providerId: session.user.id,
+      serviceRequestId: { in: visible.map((r) => r.id) },
+    },
+    select: {
+      serviceRequestId: true,
+      price: true,
+      estimatedDuration: true,
+      message: true,
+      availability: true,
+      materialsIncluded: true,
+      onSiteInspection: true,
+      status: true,
+    },
+  });
+  const offerMap = new Map(myOffers.map((o) => [o.serviceRequestId, o]));
+
+  const requests = visible.map((r) => {
+    const mine = offerMap.get(r.id);
+    return {
       id: r.id,
       title: r.title,
       city: r.city,
@@ -42,7 +62,19 @@ export default async function Page() {
       offerCount: r._count.offers,
       budgetMin: r.budgetMin,
       budgetMax: r.budgetMax,
-    }));
+      myOffer: mine
+        ? {
+            price: mine.price,
+            estimatedDuration: mine.estimatedDuration ?? "",
+            message: mine.message ?? "",
+            availability: mine.availability ?? "",
+            materialsIncluded: mine.materialsIncluded ?? false,
+            onSiteInspection: mine.onSiteInspection ?? false,
+            status: mine.status as string,
+          }
+        : null,
+    };
+  });
 
   return (
     <div>
@@ -104,11 +136,7 @@ export default async function Page() {
         </div>
       )}
 
-      <ProviderDashboard
-        initialBalance={wallet.balance}
-        initialHeld={wallet.heldBalance}
-        requests={requests}
-      />
+      <ProviderDashboard requests={requests} />
     </div>
   );
 }

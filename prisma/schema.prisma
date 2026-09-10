@@ -281,7 +281,10 @@ model Offer {
   price             Int // Teklif edilen iş ücreti (TL)
   estimatedDuration String? // "2 gün", "1 hafta" vb.
   message           String?
-  creditCost        Int           @default(100) // Bu teklif için harcanan kontör
+  availability      String? // Müsaitlik (ör. "Yarın 14:00", "Hafta içi")
+  materialsIncluded Boolean? // Malzeme fiyata dahil mi
+  onSiteInspection  Boolean? // Yerinde keşif gerekli mi
+  creditCost        Int           @default(0) // 1. yıl ücretsiz — kontör kapalı
   status            OfferStatus   @default(PENDING)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt

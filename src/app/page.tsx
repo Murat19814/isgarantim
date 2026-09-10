@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
+import { Year1Banner } from "@/components/Year1Banner";
 import { EntryCards } from "@/components/EntryCards";
 import { Stats } from "@/components/Stats";
 import { Categories } from "@/components/Categories";
@@ -15,6 +16,7 @@ export default function HomePage() {
       <Navbar />
       <main>
         <Hero />
+        <Year1Banner />
         <EntryCards />
         <Stats />
         <Categories />

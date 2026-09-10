@@ -25,6 +25,9 @@ export const offerSchema = z.object({
   price: z.number().int().positive("Geçerli bir fiyat gir."),
   estimatedDuration: z.string().min(1, "Tahmini süre gir.").max(60),
   message: z.string().max(1000).optional(),
+  availability: z.string().max(120).optional(),
+  materialsIncluded: z.boolean().optional(),
+  onSiteInspection: z.boolean().optional(),
 });
 
 export type OfferInput = z.infer<typeof offerSchema>;

@@ -30,6 +30,41 @@ export const LEGAL = {
 /** Teklif için harcanan varsayılan kontör bedeli. */
 export const DEFAULT_OFFER_CREDIT_COST = 100;
 
+/**
+ * 1. YIL ÜCRETSİZ MODELİ
+ * Teklif vermek ücretsiz (kontör/komisyon kapalı). Yalnız firma iş ilanları
+ * ücretli (ilk 6 ücretsiz). Aşağıdaki değerler ileride admin panelinden
+ * yönetilebilir hale getirilecek.
+ */
+export const YEAR1_FREE = true;
+/** Bir talebe en fazla kaç hizmet veren teklif verebilir. */
+export const MAX_OFFERS_PER_REQUEST = 5;
+/** İlk yıl aylık teklif limiti (yüksek/sınırsız). 0 = sınırsız. */
+export const MONTHLY_OFFER_LIMIT = 0;
+
+/** 1. yıl reklam sloganı. */
+export const YEAR1_SLOGAN =
+  "Bir yıl boyunca kontör yok, komisyon yok, teklif ücreti yok. Hizmetini bul, teklifini ver, kazancın senin olsun.";
+
+/**
+ * Kategori görselleri (ana sayfa vitrini). Tarayıcı doğrudan Unsplash'ten
+ * yükler (sunucu egress'ine bağlı değil). slug → görsel URL.
+ */
+export const CATEGORY_IMAGES: Record<string, string> = {
+  "tadilat-tamir": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=500&q=60",
+  temizlik: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=500&q=60",
+  tesisat: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=500&q=60",
+  elektrik: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=500&q=60",
+  nakliyat: "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=500&q=60",
+  mobilya: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=500&q=60",
+  bahce: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=500&q=60",
+  "beyaz-esya": "https://images.unsplash.com/photo-1585659722983-3a675dabf23d?auto=format&fit=crop&w=500&q=60",
+  "ozel-ders": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=500&q=60",
+  guzellik: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=500&q=60",
+  bilisim: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=500&q=60",
+  organizasyon: "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=500&q=60",
+};
+
 /** Müşterinin işi onaylaması için verilen süre (gün). */
 export const APPROVAL_WINDOW_DAYS = 3;
 

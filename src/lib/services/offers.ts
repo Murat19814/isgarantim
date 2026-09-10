@@ -4,28 +4,38 @@ import {
   PaymentStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import {
-  holdCreditsTx,
-  captureCreditsTx,
-  refundCreditsTx,
-  InsufficientCreditsError,
-} from "@/lib/services/credits";
-import { DEFAULT_OFFER_CREDIT_COST } from "@/lib/constants";
+import { MAX_OFFERS_PER_REQUEST } from "@/lib/constants";
 import { notify } from "@/lib/services/notifications";
 import type { OfferInput } from "@/lib/validations/service";
 
 export class OfferError extends Error {}
 
+/** Hizmet verenin profili doğrulanmış mı? (1. yıl: e-posta veya telefon yeterli) */
+async function assertVerifiedProvider(providerId: string) {
+  const u = await prisma.user.findUnique({
+    where: { id: providerId },
+    select: { emailVerified: true, phoneVerified: true, isBanned: true, isActive: true },
+  });
+  if (!u) throw new OfferError("Kullanıcı bulunamadı.");
+  if (u.isBanned || !u.isActive) throw new OfferError("Hesabın teklif veremez durumda.");
+  if (!u.emailVerified && !u.phoneVerified)
+    throw new OfferError("Teklif vermek için önce profilini doğrulamalısın (e-posta veya telefon).");
+}
+
 /**
- * Hizmet veren teklif verir.
- * Teklif verilince DEFAULT_OFFER_CREDIT_COST kadar kontör BEKLEMEYE alınır.
- * Kontör rezervasyonu + teklif oluşturma tek atomik blokta yapılır.
+ * Hizmet veren teklif verir — 1. YIL ÜCRETSİZ (kontör yok).
+ * Kurallar:
+ *  - Sadece doğrulanmış profiller teklif verebilir.
+ *  - Bir talebe en fazla MAX_OFFERS_PER_REQUEST hizmet veren teklif verebilir.
+ *  - Aynı kişi aynı talebe yalnızca 1 teklif verir (güncelleme için updateOffer).
  */
 export async function createOffer(
   providerId: string,
   requestId: string,
   input: OfferInput,
 ) {
+  await assertVerifiedProvider(providerId);
+
   const request = await prisma.serviceRequest.findUnique({
     where: { id: requestId },
     select: { id: true, customerId: true, status: true, title: true },
@@ -40,49 +50,91 @@ export async function createOffer(
   const existing = await prisma.offer.findUnique({
     where: { serviceRequestId_providerId: { serviceRequestId: requestId, providerId } },
   });
-  if (existing) throw new OfferError("Bu talebe zaten teklif verdin.");
+  if (existing) throw new OfferError("Bu talebe zaten teklif verdin. Teklifini güncelleyebilirsin.");
 
-  const cost = DEFAULT_OFFER_CREDIT_COST;
+  // En fazla 5 teklif (aktif/bekleyen)
+  const count = await prisma.offer.count({
+    where: { serviceRequestId: requestId, status: OfferStatus.PENDING },
+  });
+  if (count >= MAX_OFFERS_PER_REQUEST)
+    throw new OfferError(
+      `Bu talep en fazla ${MAX_OFFERS_PER_REQUEST} teklif alabilir ve doldu.`,
+    );
 
-  try {
-    const offer = await prisma.$transaction(async (tx) => {
-      const created = await tx.offer.create({
-        data: {
-          serviceRequestId: requestId,
-          providerId,
-          price: input.price,
-          estimatedDuration: input.estimatedDuration,
-          message: input.message,
-          creditCost: cost,
-          status: OfferStatus.PENDING,
-        },
-      });
-      // Kontörü beklemeye al
-      await holdCreditsTx(tx, providerId, cost, created.id);
-      return created;
-    });
+  const offer = await prisma.offer.create({
+    data: {
+      serviceRequestId: requestId,
+      providerId,
+      price: input.price,
+      estimatedDuration: input.estimatedDuration,
+      message: input.message,
+      availability: input.availability,
+      materialsIncluded: input.materialsIncluded,
+      onSiteInspection: input.onSiteInspection,
+      creditCost: 0,
+      status: OfferStatus.PENDING,
+    },
+  });
 
-    // Müşteriye bildirim
-    await notify(request.customerId, {
-      type: "OFFER_RECEIVED",
-      title: "Yeni teklif aldın",
-      body: `"${request.title}" talebine yeni bir teklif geldi.`,
-      link: `/panel/hizmet-al/${requestId}`,
-    });
+  // Müşteriye bildirim
+  await notify(request.customerId, {
+    type: "OFFER_RECEIVED",
+    title: "Yeni teklif aldın",
+    body: `"${request.title}" talebine yeni bir teklif geldi.`,
+    link: `/panel/hizmet-al/${requestId}`,
+  });
 
-    return offer;
-  } catch (e) {
-    if (e instanceof InsufficientCreditsError) throw new OfferError(e.message);
-    throw e;
-  }
+  return offer;
 }
 
 /**
- * Müşteri kazanan teklifi seçer.
- *  - Kazananın kontörü KESİN kesilir (CAPTURE)
- *  - Diğer bekleyen tekliflerin kontörü İADE edilir (REFUND)
+ * Hizmet veren kendi teklifini günceller (talep hâlâ açıkken ve teklif PENDING iken).
+ */
+export async function updateOffer(
+  providerId: string,
+  requestId: string,
+  input: OfferInput,
+) {
+  await assertVerifiedProvider(providerId);
+
+  const offer = await prisma.offer.findUnique({
+    where: { serviceRequestId_providerId: { serviceRequestId: requestId, providerId } },
+    include: { serviceRequest: { select: { status: true, customerId: true, title: true } } },
+  });
+  if (!offer) throw new OfferError("Güncellenecek teklif bulunamadı.");
+  if (offer.status !== OfferStatus.PENDING)
+    throw new OfferError("Bu teklif artık güncellenemez.");
+  if (offer.serviceRequest.status !== ServiceRequestStatus.OPEN)
+    throw new OfferError("Talep artık teklif kabul etmiyor.");
+
+  const updated = await prisma.offer.update({
+    where: { id: offer.id },
+    data: {
+      price: input.price,
+      estimatedDuration: input.estimatedDuration,
+      message: input.message,
+      availability: input.availability,
+      materialsIncluded: input.materialsIncluded,
+      onSiteInspection: input.onSiteInspection,
+    },
+  });
+
+  await notify(offer.serviceRequest.customerId, {
+    type: "OFFER_UPDATED",
+    title: "Bir teklif güncellendi",
+    body: `"${offer.serviceRequest.title}" talebindeki bir teklif güncellendi.`,
+    link: `/panel/hizmet-al/${requestId}`,
+  });
+
+  return updated;
+}
+
+/**
+ * Müşteri kazanan teklifi seçer — 1. YIL ÜCRETSİZ (kontör kesintisi yok).
+ *  - Kazanan WON, diğerleri LOST
  *  - Talep OFFER_SELECTED durumuna geçer
- *  - Emanet ödeme için PENDING bir Payment kaydı oluşturulur (Faz 4 fonlar)
+ *  - Raporlama için bir Payment kaydı (kararlaştırılan tutar) oluşturulur;
+ *    ödeme tahsilatı 1. yıl kapalı, taraflar doğrudan anlaşır.
  */
 export async function selectOffer(
   customerId: string,
@@ -107,31 +159,27 @@ export async function selectOffer(
     throw new OfferError("Bu teklif seçilebilir durumda değil.");
 
   const result = await prisma.$transaction(async (tx) => {
-    // Kazanan: kontör kesin kesilir
-    await captureCreditsTx(tx, winner.providerId, winner.creditCost, winner.id);
     await tx.offer.update({
       where: { id: winner.id },
       data: { status: OfferStatus.WON },
     });
 
-    // Kaybedenler: kontör iade
+    // Diğer teklifler: LOST
     for (const other of request.offers) {
       if (other.id === winner.id) continue;
       if (other.status !== OfferStatus.PENDING) continue;
-      await refundCreditsTx(tx, other.providerId, other.creditCost, other.id);
       await tx.offer.update({
         where: { id: other.id },
         data: { status: OfferStatus.LOST },
       });
     }
 
-    // Talep durumunu güncelle
     await tx.serviceRequest.update({
       where: { id: request.id },
       data: { status: ServiceRequestStatus.OFFER_SELECTED },
     });
 
-    // Emanet ödeme kaydı (Faz 4'te fonlanacak)
+    // Raporlama amaçlı kayıt (ödeme tahsilatı 1. yıl kapalı)
     const payment = await tx.payment.create({
       data: {
         serviceRequestId: request.id,
@@ -149,7 +197,7 @@ export async function selectOffer(
   await notify(winner.providerId, {
     type: "OFFER_WON",
     title: "Teklifin kabul edildi 🎉",
-    body: `"${requestTitle}" için teklifin seçildi. Müşteri ödemeyi emanete alınca işe başlayabilirsin.`,
+    body: `"${requestTitle}" için teklifin seçildi. Müşteriyle iletişime geçebilirsin.`,
     link: `/panel/hizmet-ver/${requestId}`,
   });
 
@@ -159,7 +207,7 @@ export async function selectOffer(
     await notify(other.providerId, {
       type: "OFFER_LOST",
       title: "Teklifin seçilmedi",
-      body: `"${requestTitle}" için başka bir teklif seçildi. Kontörün iade edildi.`,
+      body: `"${requestTitle}" için başka bir teklif seçildi.`,
       link: `/panel/hizmet-ver`,
     });
   }
