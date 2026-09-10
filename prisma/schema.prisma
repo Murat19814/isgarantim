@@ -143,6 +143,7 @@ model User {
   notifications    Notification[]
   complaintsFiled  Complaint[]      @relation("ComplaintReporter")
   problemReports   ProblemReport[]  @relation("ProblemReporter")
+  verifications    Verification[]
   verificationTokens VerificationToken[]
 
   @@index([email])
@@ -184,6 +185,44 @@ model ProviderProfile {
   avgResponseMin Int? // Ortalama yanıt süresi (dk)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// KADEMELİ DOĞRULAMA (rozetler) — belgeler gizli, sadece rozet gösterilir
+// ─────────────────────────────────────────────
+
+enum VerificationType {
+  PHONE // Telefon (User.phoneVerified'dan türetilir)
+  EMAIL // E-posta (User.emailVerified'dan türetilir)
+  IDENTITY // Kimlik doğrulandı
+  ADDRESS // Adres doğrulandı
+  PROFESSIONAL // Mesleki belge doğrulandı
+  COMPANY // Firma doğrulandı
+  REFERENCE // Referans doğrulandı
+}
+
+enum VerificationStatus {
+  PENDING // Belge yüklendi, admin onayı bekliyor
+  APPROVED // Onaylandı — rozet aktif
+  REJECTED // Reddedildi
+}
+
+model Verification {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         VerificationType
+  status       VerificationStatus @default(PENDING)
+  documentUrl  String? // GİZLİ — sadece admin görür, herkese kapalı
+  note         String? // Kullanıcının açıklaması
+  adminNote    String? // Admin notu (gizli)
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([userId, type])
+  @@index([status])
 }
 
 model CreditWallet {

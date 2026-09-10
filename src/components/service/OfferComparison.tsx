@@ -4,18 +4,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Star, ShieldCheck, CheckCircle2, Clock, Loader2, Trophy, MessageSquare,
+  Package, Search, CalendarClock,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
+import { VerificationBadges } from "@/components/VerificationBadges";
 
 type Offer = {
   id: string;
   price: number;
   estimatedDuration: string | null;
   message: string | null;
+  availability: string | null;
+  materialsIncluded: boolean | null;
+  onSiteInspection: boolean | null;
   status: string;
   provider: {
     id: string;
     fullName: string;
+    emailVerified: Date | string | null;
+    phoneVerified: Date | string | null;
+    verifications: { type: string }[];
     providerProfile: {
       ratingAvg: number;
       ratingCount: number;
@@ -27,6 +35,19 @@ type Offer = {
     } | null;
   };
 };
+
+function computeBadges(p: Offer["provider"]): Record<string, boolean> {
+  const approved = new Set(p.verifications.map((v) => v.type));
+  return {
+    PHONE: !!p.phoneVerified,
+    EMAIL: !!p.emailVerified,
+    IDENTITY: approved.has("IDENTITY"),
+    ADDRESS: approved.has("ADDRESS"),
+    PROFESSIONAL: approved.has("PROFESSIONAL"),
+    COMPANY: approved.has("COMPANY"),
+    REFERENCE: approved.has("REFERENCE"),
+  };
+}
 
 export function OfferComparison({
   requestId,
@@ -42,7 +63,7 @@ export function OfferComparison({
   const [error, setError] = useState<string | null>(null);
 
   async function select(offerId: string) {
-    if (!confirm("Bu hizmet vereni seçmek istediğine emin misin? Diğer tekliflerin kontörü iade edilecek.")) return;
+    if (!confirm("Bu hizmet vereni seçmek istediğine emin misin? Ardından randevu oluşturabilirsin.")) return;
     setLoadingId(offerId);
     setError(null);
     try {
@@ -82,6 +103,7 @@ export function OfferComparison({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {offers.map((o) => {
           const p = o.provider.providerProfile;
+          const badges = computeBadges(o.provider);
           const won = o.status === "WON";
           const lost = o.status === "LOST";
           return (
@@ -120,6 +142,11 @@ export function OfferComparison({
                 </div>
               </div>
 
+              {/* Doğrulama rozetleri (belge içeriği gösterilmez) */}
+              <div className="mt-3">
+                <VerificationBadges badges={badges} />
+              </div>
+
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <Stat
                   icon={<Star className="h-4 w-4 fill-gold-400 text-gold-400" />}
@@ -148,6 +175,27 @@ export function OfferComparison({
                   }
                 />
               </div>
+
+              {/* Teklif detayları */}
+              {(o.availability || o.materialsIncluded || o.onSiteInspection) && (
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  {o.availability && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-navy-50 px-2 py-0.5 text-navy-600">
+                      <CalendarClock className="h-3.5 w-3.5" /> {o.availability}
+                    </span>
+                  )}
+                  {o.materialsIncluded && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">
+                      <Package className="h-3.5 w-3.5" /> Malzeme dahil
+                    </span>
+                  )}
+                  {o.onSiteInspection && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gold-50 px-2 py-0.5 text-gold-600">
+                      <Search className="h-3.5 w-3.5" /> Yerinde keşif
+                    </span>
+                  )}
+                </div>
+              )}
 
               {o.message && (
                 <p className="mt-4 flex gap-2 rounded-xl bg-navy-50 p-3 text-sm text-navy-600">

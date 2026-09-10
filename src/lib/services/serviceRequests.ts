@@ -173,6 +173,12 @@ export async function getRequestWithOffers(requestId: string) {
             select: {
               id: true,
               fullName: true,
+              emailVerified: true,
+              phoneVerified: true,
+              verifications: {
+                where: { status: "APPROVED" },
+                select: { type: true },
+              },
               providerProfile: {
                 select: {
                   ratingAvg: true,

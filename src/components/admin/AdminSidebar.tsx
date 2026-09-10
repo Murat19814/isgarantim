@@ -18,6 +18,7 @@ const LINKS = [
   { href: "/admin/kategoriler", label: "Kategoriler", icon: Tags },
   { href: "/admin/sikayetler", label: "Şikayetler", icon: Flag },
   { href: "/admin/sorunlar", label: "Sorun Bildirimleri", icon: ShieldAlert },
+  { href: "/admin/dogrulamalar", label: "Doğrulamalar", icon: ShieldCheck },
 ];
 
 export function AdminSidebar() {
