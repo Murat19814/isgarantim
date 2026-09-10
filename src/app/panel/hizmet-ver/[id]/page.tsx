@@ -86,7 +86,28 @@ export default async function Page({ params }: { params: { id: string } }) {
           <span className="rounded-full bg-navy-50 px-2.5 py-1 text-navy-600">
             Yer: {LOCATION_LABELS[request.locationType] ?? request.locationType}
           </span>
+          {request.isEmergency && (
+            <span className="rounded-full bg-red-50 px-2.5 py-1 font-medium text-red-600">🚨 Acil</span>
+          )}
+          {request.isBulk && (
+            <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
+              Kurumsal / toplu{request.bulkQuantity ? ` · ${request.bulkQuantity} adet` : ""}
+              {request.orgType ? ` · ${request.orgType}` : ""}
+            </span>
+          )}
         </div>
+        {(request.prefVerifiedProvider || request.prefWomanProvider || request.prefReviewedProvider || request.prefTeamProvider) && (
+          <div className="mt-3 rounded-xl border border-navy-100 bg-navy-50/40 p-3 text-xs text-navy-600">
+            <span className="font-medium text-navy-800">Müşterinin güven tercihleri: </span>
+            {[
+              request.prefVerifiedProvider && "kimliği doğrulanmış",
+              request.prefWomanProvider && "kadın hizmet veren",
+              request.prefReviewedProvider && "yorumlu",
+              request.prefTeamProvider && "ekiple gelen",
+            ].filter(Boolean).join(", ")}
+            . Herkes teklif verebilir.
+          </div>
+        )}
         {request.videos && request.videos.length > 0 && (
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {request.videos.map((src, i) => (

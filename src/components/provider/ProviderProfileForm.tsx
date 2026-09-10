@@ -23,6 +23,8 @@ type Initial = {
   workStart: string;
   workEnd: string;
   sameDayAvailable: boolean;
+  gender: string;
+  worksWithTeam: boolean;
 };
 
 export function ProviderProfileForm({
@@ -50,6 +52,8 @@ export function ProviderProfileForm({
   const [workStart, setWorkStart] = useState(initial?.workStart ?? "");
   const [workEnd, setWorkEnd] = useState(initial?.workEnd ?? "");
   const [sameDayAvailable, setSameDayAvailable] = useState(initial?.sameDayAvailable ?? false);
+  const [gender, setGender] = useState(initial?.gender ?? "");
+  const [worksWithTeam, setWorksWithTeam] = useState(initial?.worksWithTeam ?? false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -87,6 +91,8 @@ export function ProviderProfileForm({
           workStart: workStart || undefined,
           workEnd: workEnd || undefined,
           sameDayAvailable,
+          gender: gender || undefined,
+          worksWithTeam,
         }),
       });
       const data = await res.json();
@@ -196,6 +202,22 @@ export function ProviderProfileForm({
             className="h-4 w-4 rounded border-navy-300 text-emerald-600" />
           <Zap className="h-4 w-4 text-gold-500" /> Aynı gün hizmet verebilirim
         </label>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-navy-800">Cinsiyet (kendi beyanın, opsiyonel)</label>
+            <select value={gender} onChange={(e) => setGender(e.target.value)} className="input">
+              <option value="">Belirtmek istemiyorum</option>
+              <option value="FEMALE">Kadın</option>
+              <option value="MALE">Erkek</option>
+            </select>
+            <p className="mt-1 text-xs text-navy-400">Yalnızca müşterinin güven tercihiyle eşleştirmek için kullanılır.</p>
+          </div>
+          <label className="inline-flex items-center gap-2 self-end pb-2 text-sm text-navy-700">
+            <input type="checkbox" checked={worksWithTeam} onChange={(e) => setWorksWithTeam(e.target.checked)}
+              className="h-4 w-4 rounded border-navy-300 text-emerald-600" />
+            Ekiple / yanımda biriyle gelebilirim
+          </label>
+        </div>
       </div>
 
       {/* Kategoriler */}

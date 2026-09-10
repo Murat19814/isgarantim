@@ -58,6 +58,8 @@ export default async function Page() {
                 workStart: profile.workStart ?? "",
                 workEnd: profile.workEnd ?? "",
                 sameDayAvailable: profile.sameDayAvailable ?? false,
+                gender: profile.gender ?? "",
+                worksWithTeam: profile.worksWithTeam ?? false,
               }
             : null
         }

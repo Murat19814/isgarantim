@@ -3,6 +3,7 @@ import { Hero } from "@/components/Hero";
 import { Year1Banner } from "@/components/Year1Banner";
 import { QuickModes } from "@/components/QuickModes";
 import { SameDayProviders } from "@/components/SameDayProviders";
+import { CallbackCta } from "@/components/CallbackCta";
 import { EntryCards } from "@/components/EntryCards";
 import { Stats } from "@/components/Stats";
 import { Categories } from "@/components/Categories";
@@ -20,6 +21,7 @@ export default function HomePage() {
         <Hero />
         <Year1Banner />
         <QuickModes />
+        <CallbackCta />
         <SameDayProviders />
         <EntryCards />
         <Stats />

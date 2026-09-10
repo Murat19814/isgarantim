@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap, MapPin, Mic, TrendingUp, Heart, ArrowRight, Siren } from "lucide-react";
+import { Zap, MapPin, Mic, TrendingUp, Heart, ArrowRight, Siren, Building2 } from "lucide-react";
 
 const MODES = [
   {
@@ -28,6 +28,13 @@ const MODES = [
     icon: Mic,
     title: "Sesli talep",
     desc: "Yazma, konuş! İşini sesli anlat.",
+    tone: "text-navy-700 bg-navy-100",
+  },
+  {
+    href: "/kurumsal",
+    icon: Building2,
+    title: "Kurumsal / toplu",
+    desc: "Apartman, şirket, restoran için toplu talep.",
     tone: "text-navy-700 bg-navy-100",
   },
   {

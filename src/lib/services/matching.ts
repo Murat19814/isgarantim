@@ -16,6 +16,10 @@ export async function notifyMatchingProviders(requestId: string) {
       title: true,
       city: true,
       customerId: true,
+      prefVerifiedProvider: true,
+      prefWomanProvider: true,
+      prefReviewedProvider: true,
+      prefTeamProvider: true,
       category: { select: { id: true, name: true, parentId: true } },
     },
   });
@@ -24,9 +28,16 @@ export async function notifyMatchingProviders(requestId: string) {
   // Talebin üst (ana) kategorisi — hizmet verenler ana kategori seçer.
   const topCatId = request.category.parentId ?? request.category.id;
 
+  // Güven tercihleri: bildirim hedeflemek için (herkes yine teklif verebilir).
+  const prefWhere: Record<string, unknown> = {};
+  if (request.prefVerifiedProvider) prefWhere.identityVerified = true;
+  if (request.prefWomanProvider) prefWhere.gender = "FEMALE";
+  if (request.prefTeamProvider) prefWhere.worksWithTeam = true;
+  if (request.prefReviewedProvider) prefWhere.ratingCount = { gt: 0 };
+
   // Bu kategoride hizmet veren profiller.
   const profiles = await prisma.providerProfile.findMany({
-    where: { categories: { some: { id: topCatId } } },
+    where: { categories: { some: { id: topCatId } }, ...prefWhere },
     select: { userId: true, city: true },
     take: 500,
   });

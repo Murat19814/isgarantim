@@ -32,6 +32,8 @@ export async function upsertProviderProfile(
     workStart: input.workStart || null,
     workEnd: input.workEnd || null,
     sameDayAvailable: input.sameDayAvailable,
+    gender: input.gender || null,
+    worksWithTeam: input.worksWithTeam,
   };
 
   return prisma.providerProfile.upsert({
@@ -70,6 +72,8 @@ export async function getPublicProviderProfile(userId: string) {
       workStart: true,
       workEnd: true,
       sameDayAvailable: true,
+      gender: true,
+      worksWithTeam: true,
       ratingAvg: true,
       ratingCount: true,
       completedJobs: true,

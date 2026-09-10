@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock, Award, Zap, RotateCcw,
+  Star, CheckCircle2, Clock, MapPin, Briefcase, Repeat, CalendarClock, Award, Zap, RotateCcw, UserRound, Users,
 } from "lucide-react";
 import { WEEKDAYS } from "@/lib/validations/profile";
 import { Navbar } from "@/components/Navbar";
@@ -216,6 +216,16 @@ export default async function Page({ params }: { params: { id: string } }) {
                 {p.sameDayAvailable && (
                   <li className="flex items-center gap-2 font-medium text-red-600">
                     <Zap className="h-4 w-4" /> Aynı gün hizmet verir
+                  </li>
+                )}
+                {p.gender === "FEMALE" && (
+                  <li className="flex items-center gap-2 text-navy-600">
+                    <UserRound className="h-4 w-4 text-emerald-600" /> Kadın hizmet veren
+                  </li>
+                )}
+                {p.worksWithTeam && (
+                  <li className="flex items-center gap-2 text-navy-600">
+                    <Users className="h-4 w-4 text-emerald-600" /> Ekiple gelebilir
                   </li>
                 )}
               </ul>

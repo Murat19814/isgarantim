@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ClipboardList, Wallet, Gavel,
-  Briefcase, Tags, Flag, ShieldCheck, ShieldAlert, Star, BarChart3, ToggleRight, ExternalLink,
+  Briefcase, Tags, Flag, ShieldCheck, ShieldAlert, Star, BarChart3, ToggleRight, ExternalLink, Phone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/admin/istatistik", label: "İstatistikler", icon: BarChart3 },
   { href: "/admin/kullanicilar", label: "Kullanıcılar", icon: Users },
   { href: "/admin/talepler", label: "Hizmet Talepleri", icon: ClipboardList },
+  { href: "/admin/beni-arayin", label: "Beni Arayın", icon: Phone },
   { href: "/admin/odemeler", label: "Ödemeler", icon: Wallet },
   { href: "/admin/itirazlar", label: "İtirazlar", icon: Gavel },
   { href: "/admin/ilanlar", label: "İş İlanları", icon: Briefcase },

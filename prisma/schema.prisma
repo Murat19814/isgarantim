@@ -159,6 +159,8 @@ model User {
   conversations    ConversationParticipant[]
   jobApplications  JobApplication[]
   notifications    Notification[]
+  callbacksCreated CallbackRequest[] @relation("CallbackCreatedBy")
+  callbacksHandled CallbackRequest[] @relation("CallbackHandledBy")
   complaintsFiled  Complaint[]      @relation("ComplaintReporter")
   problemReports   ProblemReport[]  @relation("ProblemReporter")
   verifications    Verification[]
@@ -270,6 +272,8 @@ model ProviderProfile {
   avgResponseMin Int? // Ortalama yanıt süresi (dk)
   trustScore     Int      @default(0) // Güven puanı (0-100, hesaplanır)
   level          String   @default("NEW") // Başarı seviyesi (kazanılır)
+  gender         String? // Kişinin kendi beyanı (FEMALE/MALE) — opsiyonel
+  worksWithTeam  Boolean  @default(false) // Ekiple/yanında biriyle gelir
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -396,6 +400,20 @@ model ServiceRequest {
   contactPreference RequestContact @default(PLATFORM)
   invitedProviderId String? // "Tekrar çağır" ile davet edilen hizmet veren
   isEmergency Boolean         @default(false) // Acil yardım talebi
+  // Kurumsal / toplu talep
+  isBulk       Boolean        @default(false) // Toplu (kurumsal) talep
+  bulkQuantity Int? // Adet/miktar (ör. 20 klima)
+  orgType      String? // Kurum tipi: apartman/şirket/restoran/otel...
+  // Güven tercihleri (müşteri beyanı — ayrımcılık kuralları gözetilir)
+  prefVerifiedProvider Boolean @default(false) // Sadece doğrulanmış
+  prefWomanProvider    Boolean @default(false) // Kadın hizmet veren tercihi
+  prefReviewedProvider Boolean @default(false) // Yorumlu hizmet veren tercihi
+  prefTeamProvider     Boolean @default(false) // Ekiple gelen tercihi
+  // Yakını adına / çağrı merkezi
+  onBehalf      Boolean @default(false) // Bir yakını adına oluşturuldu
+  onBehalfName  String? // Yakının adı (özel; herkese açık gösterilmez)
+  onBehalfPhone String? // Yakının telefonu (özel; herkese açık gösterilmez)
+  createdByStaff Boolean @default(false) // Çağrı merkezi/operatör oluşturdu
   status      ServiceRequestStatus @default(OPEN)
   // 1. yıl emanetsiz akış alanları
   scheduledAt DateTime? // Kararlaştırılan randevu tarihi
@@ -842,4 +860,26 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+}
+
+// ─────────────────────────────────────────────
+// ÇAĞRI MERKEZİ — "Beni arayın" talepleri
+// ─────────────────────────────────────────────
+
+model CallbackRequest {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  topic       String? // Konu / kısa açıklama
+  city        String?
+  status      String   @default("NEW") // NEW / CONTACTED / DONE / CANCELLED
+  adminNote   String?
+  createdById String? // Giriş yapmış kullanıcıysa
+  createdBy   User?    @relation("CallbackCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  handledById String? // İşleyen operatör/admin
+  handledBy   User?    @relation("CallbackHandledBy", fields: [handledById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, createdAt])
 }

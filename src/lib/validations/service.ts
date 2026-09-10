@@ -21,6 +21,16 @@ export const serviceRequestSchema = z
     voiceNote: mediaUrl.optional().or(z.literal("").transform(() => undefined)),
     invitedProviderId: z.string().optional(),
     isEmergency: z.boolean().default(false),
+    isBulk: z.boolean().default(false),
+    bulkQuantity: z.number().int().positive().max(100000).optional(),
+    orgType: z.string().max(60).optional(),
+    prefVerifiedProvider: z.boolean().default(false),
+    prefWomanProvider: z.boolean().default(false),
+    prefReviewedProvider: z.boolean().default(false),
+    prefTeamProvider: z.boolean().default(false),
+    onBehalf: z.boolean().default(false),
+    onBehalfName: z.string().max(120).optional().or(z.literal("").transform(() => undefined)),
+    onBehalfPhone: z.string().max(30).optional().or(z.literal("").transform(() => undefined)),
   })
   .refine(
     (d) => !d.budgetMin || !d.budgetMax || d.budgetMax >= d.budgetMin,
@@ -55,6 +65,16 @@ export const agreementSchema = z.object({
 });
 
 export type AgreementInput = z.infer<typeof agreementSchema>;
+
+/** "Beni arayın" — çağrı merkezi geri arama talebi. */
+export const callbackSchema = z.object({
+  name: z.string().min(2, "Adını yaz.").max(120),
+  phone: z.string().min(7, "Geçerli bir telefon yaz.").max(30),
+  topic: z.string().max(500).optional().or(z.literal("").transform(() => undefined)),
+  city: z.string().max(80).optional().or(z.literal("").transform(() => undefined)),
+});
+
+export type CallbackInput = z.infer<typeof callbackSchema>;
 
 export const purchaseCreditsSchema = z.object({
   amount: z

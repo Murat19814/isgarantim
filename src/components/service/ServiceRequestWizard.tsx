@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2, Wand2, Sparkles, RotateCcw, Zap,
+  Check, ChevronLeft, ChevronRight, Loader2, MapPin, ImagePlus, X, Tag, FileText, Video, Mic, Square, Trash2, Wand2, Sparkles, RotateCcw, Zap, Building2, ShieldCheck, UserPlus,
 } from "lucide-react";
 import { cn, formatTRY } from "@/lib/utils";
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -45,6 +45,16 @@ export function ServiceRequestWizard({
   const [invitedProviderId, setInvitedProviderId] = useState<string>("");
   const [invitedName, setInvitedName] = useState<string>("");
   const [isEmergency, setIsEmergency] = useState(false);
+  const [isBulk, setIsBulk] = useState(false);
+  const [bulkQuantity, setBulkQuantity] = useState("");
+  const [orgType, setOrgType] = useState("");
+  const [prefVerifiedProvider, setPrefVerifiedProvider] = useState(false);
+  const [prefWomanProvider, setPrefWomanProvider] = useState(false);
+  const [prefReviewedProvider, setPrefReviewedProvider] = useState(false);
+  const [prefTeamProvider, setPrefTeamProvider] = useState(false);
+  const [onBehalf, setOnBehalf] = useState(false);
+  const [onBehalfName, setOnBehalfName] = useState("");
+  const [onBehalfPhone, setOnBehalfPhone] = useState("");
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
@@ -63,6 +73,7 @@ export function ServiceRequestWizard({
       setIsEmergency(true);
       setUrgency("URGENT");
     }
+    if (sp.get("bulk") === "1") setIsBulk(true);
     const t = sp.get("title");
     if (t) setTitle(t.slice(0, 120));
   }, [categories]);
@@ -113,6 +124,16 @@ export function ServiceRequestWizard({
       voiceNote: voiceNote || undefined,
       invitedProviderId: invitedProviderId || undefined,
       isEmergency,
+      isBulk,
+      bulkQuantity: isBulk && bulkQuantity ? Number(bulkQuantity) : undefined,
+      orgType: isBulk && orgType ? orgType : undefined,
+      prefVerifiedProvider,
+      prefWomanProvider,
+      prefReviewedProvider,
+      prefTeamProvider,
+      onBehalf,
+      onBehalfName: onBehalf && onBehalfName ? onBehalfName : undefined,
+      onBehalfPhone: onBehalf && onBehalfPhone ? onBehalfPhone : undefined,
     };
     try {
       const res = await fetch("/api/service-requests", {
@@ -389,6 +410,91 @@ export function ServiceRequestWizard({
               <option value="PHONE">Telefon</option>
               <option value="BOTH">İkisi de olur</option>
             </select>
+          </div>
+
+          {/* Kurumsal / toplu talep */}
+          <div className="rounded-xl border border-navy-100 bg-navy-50/40 p-4">
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-navy-800">
+              <input type="checkbox" checked={isBulk} onChange={(e) => setIsBulk(e.target.checked)}
+                className="h-4 w-4 rounded border-navy-300 text-emerald-600" />
+              <Building2 className="h-4 w-4 text-emerald-600" /> Kurumsal / toplu talep
+            </label>
+            {isBulk && (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-navy-500">Adet / miktar</label>
+                  <input type="number" value={bulkQuantity} onChange={(e) => setBulkQuantity(e.target.value)}
+                    className="input" placeholder="ör. 20 klima" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-navy-500">Kurum tipi</label>
+                  <select value={orgType} onChange={(e) => setOrgType(e.target.value)} className="input">
+                    <option value="">Seçiniz</option>
+                    <option value="Apartman/Site">Apartman / Site yönetimi</option>
+                    <option value="Şirket/Ofis">Şirket / Ofis</option>
+                    <option value="Restoran/Kafe">Restoran / Kafe</option>
+                    <option value="Otel">Otel</option>
+                    <option value="Fabrika">Fabrika / Üretim</option>
+                    <option value="Diğer">Diğer</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Güven tercihleri */}
+          <div className="rounded-xl border border-navy-100 p-4">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-navy-800">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" /> Güven tercihlerin (opsiyonel)
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="inline-flex items-center gap-2 text-sm text-navy-700">
+                <input type="checkbox" checked={prefVerifiedProvider} onChange={(e) => setPrefVerifiedProvider(e.target.checked)}
+                  className="h-4 w-4 rounded border-navy-300 text-emerald-600" /> Kimliği doğrulanmış
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-navy-700">
+                <input type="checkbox" checked={prefReviewedProvider} onChange={(e) => setPrefReviewedProvider(e.target.checked)}
+                  className="h-4 w-4 rounded border-navy-300 text-emerald-600" /> Yorumlu (değerlendirilmiş)
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-navy-700">
+                <input type="checkbox" checked={prefWomanProvider} onChange={(e) => setPrefWomanProvider(e.target.checked)}
+                  className="h-4 w-4 rounded border-navy-300 text-emerald-600" /> Kadın hizmet veren
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-navy-700">
+                <input type="checkbox" checked={prefTeamProvider} onChange={(e) => setPrefTeamProvider(e.target.checked)}
+                  className="h-4 w-4 rounded border-navy-300 text-emerald-600" /> Ekiple gelen
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-navy-400">
+              Tercihler yalnızca uygun ustaların bilgilendirilmesi içindir; herkes teklif verebilir.
+              Beyanlar kişilerin kendi bildirimidir.
+            </p>
+          </div>
+
+          {/* Yakını adına talep */}
+          <div className="rounded-xl border border-navy-100 p-4">
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-navy-800">
+              <input type="checkbox" checked={onBehalf} onChange={(e) => setOnBehalf(e.target.checked)}
+                className="h-4 w-4 rounded border-navy-300 text-emerald-600" />
+              <UserPlus className="h-4 w-4 text-emerald-600" /> Bir yakınım adına oluşturuyorum
+            </label>
+            {onBehalf && (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-navy-500">Yakının adı</label>
+                  <input value={onBehalfName} onChange={(e) => setOnBehalfName(e.target.value)}
+                    className="input" placeholder="ör. Annem - Ayşe" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-navy-500">Yakının telefonu (gizli)</label>
+                  <input value={onBehalfPhone} onChange={(e) => setOnBehalfPhone(e.target.value)}
+                    className="input" placeholder="05xx xxx xx xx" inputMode="tel" />
+                </div>
+                <p className="col-span-2 text-xs text-navy-400">
+                  Bu bilgiler yalnızca hizmetin doğru kişiye ulaşması için saklanır, herkese açık gösterilmez.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

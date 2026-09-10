@@ -16,6 +16,8 @@ export const providerProfileSchema = z.object({
   workStart: z.string().max(5).optional().or(z.literal("")),
   workEnd: z.string().max(5).optional().or(z.literal("")),
   sameDayAvailable: z.boolean().default(false),
+  gender: z.enum(["FEMALE", "MALE"]).optional().or(z.literal("").transform(() => undefined)),
+  worksWithTeam: z.boolean().default(false),
 });
 
 export const WEEKDAYS: { key: string; label: string }[] = [
