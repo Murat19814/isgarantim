@@ -8,7 +8,7 @@ export default function Page() {
   return (
     <AuthShell
       title="Hesabını doğrula"
-      subtitle="E-postana ve telefonuna gönderdiğimiz 6 haneli kodları gir."
+      subtitle="E-postana gönderdiğimiz 6 haneli kodu gir."
     >
       <Suspense fallback={null}>
         <VerifyForm />

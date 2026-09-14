@@ -71,17 +71,15 @@ export async function POST(req: Request) {
     await applyReferralOnRegister(user.id, referralCode).catch(() => null);
   }
 
-  // Doğrulama kodlarını gönder (e-posta + telefon)
-  await Promise.all([
-    issueVerificationCode(user.id, VerificationChannel.EMAIL, normEmail),
-    issueVerificationCode(user.id, VerificationChannel.PHONE, normPhone),
-  ]);
+  // Doğrulama kodu gönder (yalnızca e-posta).
+  // Telefon SMS doğrulaması 1. yılda kapalı; numara iletişim için saklanır.
+  await issueVerificationCode(user.id, VerificationChannel.EMAIL, normEmail);
 
   return NextResponse.json(
     {
       ok: true,
       userId: user.id,
-      message: "Kayıt başarılı. E-posta ve telefonuna doğrulama kodu gönderildi.",
+      message: "Kayıt başarılı. E-postana doğrulama kodu gönderildi.",
     },
     { status: 201 },
   );

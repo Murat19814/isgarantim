@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Loader2, Mail, Smartphone, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Channel = "EMAIL" | "PHONE";
@@ -16,7 +16,8 @@ export function VerifyForm() {
     PHONE: false,
   });
 
-  const allDone = verified.EMAIL && verified.PHONE;
+  // 1. yılda yalnızca e-posta doğrulaması zorunlu (SMS kapalı).
+  const allDone = verified.EMAIL;
 
   if (!userId) {
     return (
@@ -35,14 +36,6 @@ export function VerifyForm() {
         icon={<Mail className="h-4 w-4" />}
         done={verified.EMAIL}
         onDone={() => setVerified((v) => ({ ...v, EMAIL: true }))}
-      />
-      <ChannelBlock
-        channel="PHONE"
-        userId={userId}
-        label="Telefon doğrulama"
-        icon={<Smartphone className="h-4 w-4" />}
-        done={verified.PHONE}
-        onDone={() => setVerified((v) => ({ ...v, PHONE: true }))}
       />
 
       {allDone ? (
