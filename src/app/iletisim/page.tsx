@@ -15,8 +15,25 @@ export default function Page() {
       <Section title="İletişim Bilgileri">
         <Bullets
           items={[
-            <>Ünvan: {LEGAL.companyName}</>,
+            <>Yetkili: {LEGAL.contactPerson}</>,
             <>Adres: {LEGAL.address}</>,
+            <>
+              Telefon:{" "}
+              <a href={`tel:${LEGAL.phoneLink}`} className="text-emerald-600 underline">
+                {LEGAL.phone}
+              </a>
+            </>,
+            <>
+              WhatsApp:{" "}
+              <a
+                href={`https://wa.me/${LEGAL.whatsappNumber}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-emerald-600 underline"
+              >
+                {LEGAL.whatsapp}
+              </a>
+            </>,
             <>
               Destek e-posta:{" "}
               <a
@@ -35,8 +52,6 @@ export default function Page() {
                 {LEGAL.kvkkEmail}
               </a>
             </>,
-            <>Telefon: {LEGAL.phone}</>,
-            <>KEP: {LEGAL.kepAddress}</>,
           ]}
         />
       </Section>

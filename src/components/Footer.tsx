@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
-import { APP_DOMAIN } from "@/lib/constants";
+import { ShieldCheck, Phone, MessageCircle, MapPin } from "lucide-react";
+import { APP_DOMAIN, LEGAL } from "@/lib/constants";
 
 const COLS = [
   {
@@ -59,6 +59,26 @@ export function Footer() {
               İşin de ödemen de güvende. Doğrulanmış ustalar, emanet ödeme ve
               binlerce iş ilanı tek platformda.
             </p>
+            <ul className="mt-4 space-y-1.5 text-sm text-navy-500">
+              <li className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-emerald-600" /> {LEGAL.address}
+              </li>
+              <li>
+                <a href={`tel:${LEGAL.phoneLink}`} className="flex items-center gap-2 hover:text-emerald-600">
+                  <Phone className="h-4 w-4 text-emerald-600" /> {LEGAL.phone}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`https://wa.me/${LEGAL.whatsappNumber}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 hover:text-emerald-600"
+                >
+                  <MessageCircle className="h-4 w-4 text-emerald-600" /> WhatsApp: {LEGAL.whatsapp}
+                </a>
+              </li>
+            </ul>
           </div>
 
           {COLS.map((col) => (

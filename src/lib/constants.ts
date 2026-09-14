@@ -14,17 +14,21 @@ export const APP_SLOGAN = "İşin de ödemen de güvende";
  * (Ticari ünvan, MERSİS, adres, vergi dairesi vb. yasal metinlerde zorunludur.)
  */
 export const LEGAL = {
-  companyName: "[Firma Ticari Ünvanı]",
+  companyName: "Murat Atalay",
   tradeName: "İşKalkan",
-  address: "[Açık Adres, İlçe/İl]",
+  contactPerson: "Murat Atalay",
+  address: "Vema Residans",
   mersis: "[MERSİS No]",
   taxOffice: "[Vergi Dairesi]",
   taxNumber: "[Vergi/TC Kimlik No]",
   kepAddress: "[KEP Adresi]",
-  phone: "[Telefon]",
+  phone: "0553 118 37 11",
+  phoneLink: "+905531183711",
+  whatsapp: "0535 663 41 66",
+  whatsappNumber: "905356634166", // wa.me için
   supportEmail: "destek@isgarantim.com",
   kvkkEmail: "kvkk@isgarantim.com",
-  lastUpdated: "10.09.2026",
+  lastUpdated: "14.09.2026",
 } as const;
 
 /** Teklif için harcanan varsayılan kontör bedeli. */
