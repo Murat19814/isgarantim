@@ -239,6 +239,36 @@ export async function setUserBan(userId: string, banned: boolean) {
   });
 }
 
+/**
+ * Kullanıcıyı ve ilişkili tüm kayıtlarını kalıcı olarak siler (cascade).
+ * Silme sonrası e-posta/telefon tekrar kullanılabilir (unique kısıt boşalır).
+ * Admin kendini silemez; son admini silemez.
+ */
+export async function deleteUser(userId: string, actingAdminId: string) {
+  if (userId === actingAdminId) {
+    throw new AdminError("Kendi hesabını silemezsin.");
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, roles: true },
+  });
+  if (!target) throw new AdminError("Kullanıcı bulunamadı.");
+
+  // Son admini silmeye karşı koruma
+  if (target.roles.includes(UserRole.ADMIN)) {
+    const adminCount = await prisma.user.count({
+      where: { roles: { has: UserRole.ADMIN } },
+    });
+    if (adminCount <= 1) {
+      throw new AdminError("Son admin hesabı silinemez.");
+    }
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
+  return { id: userId };
+}
+
 export async function setUserRoles(userId: string, roles: UserRole[]) {
   // En az bir rol kalsın
   const unique = Array.from(new Set(roles));

@@ -171,7 +171,7 @@ model User {
   // Davet sistemi
   referralCode     String?          @unique
   referredById     String?
-  referredBy       User?            @relation("Referrals", fields: [referredById], references: [id])
+  referredBy       User?            @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals        User[]           @relation("Referrals")
   isFounder        Boolean          @default(false) // Kurucu üye rozeti
   referralMilestone Int             @default(0) // Ulaşılan davet ödül kademesi
@@ -380,7 +380,7 @@ model JobCategory {
 model ServiceRequest {
   id          String               @id @default(cuid())
   customerId  String
-  customer    User                 @relation("CustomerRequests", fields: [customerId], references: [id])
+  customer    User                 @relation("CustomerRequests", fields: [customerId], references: [id], onDelete: Cascade)
   categoryId  String
   category    ServiceCategory      @relation(fields: [categoryId], references: [id])
   subCategory String?
@@ -490,7 +490,7 @@ model ProblemReport {
   serviceRequestId String
   serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   reporterId       String
-  reporter         User           @relation("ProblemReporter", fields: [reporterId], references: [id])
+  reporter         User           @relation("ProblemReporter", fields: [reporterId], references: [id], onDelete: Cascade)
   type             ProblemType
   description      String
   media            String[] // Foto/video URL'leri
@@ -508,7 +508,7 @@ model Offer {
   serviceRequestId  String
   serviceRequest    ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   providerId        String
-  provider          User          @relation(fields: [providerId], references: [id])
+  provider          User          @relation(fields: [providerId], references: [id], onDelete: Cascade)
   price             Int // Teklif edilen iş ücreti (TL)
   estimatedDuration String? // "2 gün", "1 hafta" vb.
   message           String?
@@ -535,9 +535,9 @@ model Offer {
 model Payment {
   id               String        @id @default(cuid())
   serviceRequestId String        @unique
-  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   customerId       String
-  customer         User          @relation("CustomerPayments", fields: [customerId], references: [id])
+  customer         User          @relation("CustomerPayments", fields: [customerId], references: [id], onDelete: Cascade)
   providerId       String // Kazanan hizmet veren
   amount           Int // İş ücreti (TL, kuruş bazlı tutmak istenirse ayarlanır)
   platformFee      Int           @default(0) // Platform komisyonu
@@ -572,7 +572,7 @@ model WorkDelivery {
 model Conversation {
   id               String                    @id @default(cuid())
   serviceRequestId String?                   @unique
-  serviceRequest   ServiceRequest?           @relation(fields: [serviceRequestId], references: [id])
+  serviceRequest   ServiceRequest?           @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
   contactUnlocked  Boolean                   @default(false) // Ödeme sonrası tel/adres açılır
   participants     ConversationParticipant[]
   messages         Message[]
@@ -596,7 +596,7 @@ model Message {
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderId       String
-  sender         User         @relation(fields: [senderId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
   body           String?
   attachments    String[] // Foto/dosya URL'leri
   isSystem       Boolean      @default(false)
@@ -612,11 +612,11 @@ model Message {
 model Review {
   id               String         @id @default(cuid())
   serviceRequestId String         @unique
-  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   authorId         String
-  author           User           @relation("ReviewAuthor", fields: [authorId], references: [id])
+  author           User           @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   targetId         String
-  target           User           @relation("ReviewTarget", fields: [targetId], references: [id])
+  target           User           @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
   rating           Int // Genel memnuniyet (1-5) — ortalamada kullanılır
   // Çok kriterli puanlar (1-5, opsiyonel)
   qualityRating       Int? // İş kalitesi
@@ -641,7 +641,7 @@ model Review {
 model Complaint {
   id          String   @id @default(cuid())
   reporterId  String
-  reporter    User     @relation("ComplaintReporter", fields: [reporterId], references: [id])
+  reporter    User     @relation("ComplaintReporter", fields: [reporterId], references: [id], onDelete: Cascade)
   subjectType String // "USER" | "SERVICE_REQUEST" | "JOB_POSTING" | "PAYMENT"
   subjectId   String
   reason      String
@@ -653,7 +653,7 @@ model Complaint {
 model Dispute {
   id               String         @id @default(cuid())
   serviceRequestId String         @unique
-  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id])
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
   openedById       String
   reason           String
   status           DisputeStatus  @default(OPEN)
@@ -744,7 +744,7 @@ model CVCertificate {
 model Company {
   id           String       @id @default(cuid())
   ownerId      String
-  owner        User         @relation(fields: [ownerId], references: [id])
+  owner        User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name         String
   taxNumber    String?
   logoUrl      String?
@@ -775,7 +775,7 @@ model CompanySubscription {
 model JobPosting {
   id           String           @id @default(cuid())
   companyId    String
-  company      Company          @relation(fields: [companyId], references: [id])
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   categoryId   String
   category     JobCategory      @relation(fields: [categoryId], references: [id])
   title        String
@@ -824,7 +824,7 @@ model JobApplication {
   jobPostingId String
   jobPosting  JobPosting           @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
   applicantId String
-  applicant   User                 @relation(fields: [applicantId], references: [id])
+  applicant   User                 @relation(fields: [applicantId], references: [id], onDelete: Cascade)
   cvId        String?
   cv          CV?                  @relation(fields: [cvId], references: [id])
   coverLetter String?

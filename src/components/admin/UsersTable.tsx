@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Ban, ShieldCheck, Loader2, UserCog, X, Check } from "lucide-react";
+import { Search, Ban, ShieldCheck, Loader2, UserCog, X, Check, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type UserRow = {
@@ -50,6 +50,25 @@ export function UsersTable({ users }: { users: UserRow[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ banned: !u.banned }),
       });
+      router.refresh();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function removeUser(u: UserRow) {
+    const ok = window.confirm(
+      `"${u.fullName}" (${u.email}) kalıcı olarak silinsin mi?\n\nBu işlem geri alınamaz; kullanıcının tüm talep, teklif, mesaj ve yorumları da silinir. E-posta tekrar kayıt için serbest kalır.`,
+    );
+    if (!ok) return;
+    setBusy(u.id + "del");
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Silme başarısız.");
+        return;
+      }
       router.refresh();
     } finally {
       setBusy(null);
@@ -182,6 +201,14 @@ export function UsersTable({ users }: { users: UserRow[] }) {
                       >
                         {busy === u.id + "ban" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
                         {u.banned ? "Yasağı kaldır" : "Yasakla"}
+                      </button>
+                      <button
+                        onClick={() => removeUser(u)}
+                        disabled={busy === u.id + "del"}
+                        className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                      >
+                        {busy === u.id + "del" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        Sil
                       </button>
                     </div>
                   </td>
