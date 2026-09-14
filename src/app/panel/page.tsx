@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   HandHelping, Wrench, Briefcase, Building2, ShieldAlert,
-  Mail, Smartphone, ArrowRight, ShieldCheck, Bell, Gift, Heart, TrendingUp,
+  Mail, ArrowRight, ShieldCheck, Bell, Gift, Heart, TrendingUp,
 } from "lucide-react";
 import { auth } from "@/lib/auth/session";
 import { ROLE_LABELS, type UserRole } from "@/lib/constants";
@@ -39,9 +39,10 @@ export default async function PanelPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?callbackUrl=/panel");
 
-  const { name, roles, emailVerified, phoneVerified } = session.user;
+  const { name, roles, emailVerified } = session.user;
   const activeRoles = roles.map((r) => r.toLowerCase()) as UserRole[];
-  const needsVerify = !emailVerified || !phoneVerified;
+  // 1. yılda yalnızca e-posta doğrulaması gerekli (telefon SMS kapalı).
+  const needsVerify = !emailVerified;
 
   return (
     <div>
@@ -64,15 +65,11 @@ export default async function PanelPage() {
           <div className="flex items-start gap-3">
             <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-gold-600" />
             <div className="text-sm text-navy-700">
-              <p className="font-semibold">Hesabını doğrula</p>
+              <p className="font-semibold">E-postanı doğrula</p>
               <p className="mt-0.5 flex flex-wrap gap-3 text-xs">
                 <span className="inline-flex items-center gap-1">
                   <Mail className="h-3.5 w-3.5" />
                   E-posta: {emailVerified ? "✅" : "❌"}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Smartphone className="h-3.5 w-3.5" />
-                  Telefon: {phoneVerified ? "✅" : "❌"}
                 </span>
               </p>
             </div>

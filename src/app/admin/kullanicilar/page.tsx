@@ -13,7 +13,7 @@ export default async function Page() {
     phone: u.phone ?? "",
     roles: u.roles as string[],
     banned: u.isBanned,
-    verified: !!u.emailVerified && !!u.phoneVerified,
+    verified: !!u.emailVerified,
     createdAt: u.createdAt.toISOString().slice(0, 10),
   }));
 
