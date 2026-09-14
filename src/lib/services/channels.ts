@@ -8,13 +8,13 @@
  */
 
 export async function sendEmail(to: string, subject: string, body: string) {
-  if (!process.env.EMAIL_PROVIDER_KEY) {
-    // Yapılandırılmadı — sessizce geç.
+  // SMTP tanımlı değilse sessizce geç (ana akış bozulmasın).
+  if (!process.env.SMTP_HOST) {
     return { sent: false, reason: "not_configured" as const };
   }
   try {
-    // TODO: gerçek sağlayıcı entegrasyonu (SendGrid/SMTP)
-    console.info(`[email] → ${to}: ${subject}`);
+    const { sendEmail: smtpSend } = await import("@/lib/notify/email");
+    await smtpSend({ to, subject, text: body });
     return { sent: true as const };
   } catch (e) {
     console.error("[email] başarısız:", e);
