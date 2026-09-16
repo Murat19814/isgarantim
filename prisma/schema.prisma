@@ -177,10 +177,35 @@ model User {
   referralMilestone Int             @default(0) // Ulaşılan davet ödül kademesi
   favorites        Favorite[]       @relation("FavoriteOwner")
   favoritedBy      Favorite[]       @relation("FavoriteProvider")
+  loginEvents      LoginEvent[]     @relation("UserLoginEvents")
 
   @@index([email])
   @@index([phone])
   @@index([referredById])
+}
+
+// ─────────────────────────────────────────────
+// GİRİŞ / ÇIKIŞ LOGLARI (güvenlik — süper admin görüntüler)
+// IP, tarayıcı, ülke/şehir ve sonuç kaydedilir.
+// ─────────────────────────────────────────────
+
+model LoginEvent {
+  id          String   @id @default(cuid())
+  userId      String? // Başarısız girişte kullanıcı bulunamayabilir
+  user        User?    @relation("UserLoginEvents", fields: [userId], references: [id], onDelete: SetNull)
+  email       String? // Denenen kimlik (e-posta/telefon) — başarısızlarda da saklanır
+  type        String   @default("LOGIN") // LOGIN | LOGIN_FAILED | LOGOUT
+  ip          String?
+  userAgent   String?
+  country     String? // Ülke adı (geo çözümünden)
+  countryCode String? // ISO ülke kodu (TR, DE...)
+  city        String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([type, createdAt])
+  @@index([country])
+  @@index([createdAt])
 }
 
 // Favori hizmet verenler

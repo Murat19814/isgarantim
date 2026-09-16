@@ -44,6 +44,7 @@ export function RegisterForm() {
       email: String(form.get("email") ?? ""),
       phone: String(form.get("phone") ?? ""),
       password: String(form.get("password") ?? ""),
+      passwordConfirm: String(form.get("passwordConfirm") ?? ""),
       roles,
       ...(referralCode ? { referralCode } : {}),
     };
@@ -122,6 +123,19 @@ export function RegisterForm() {
           placeholder="En az 8 karakter, büyük/küçük harf + rakam"
         />
         <FieldError errors={fieldErrors.password} />
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-navy-800">
+          Şifre (Tekrar)
+        </label>
+        <input
+          name="passwordConfirm"
+          type="password"
+          className="input"
+          placeholder="Şifreni tekrar gir"
+        />
+        <FieldError errors={fieldErrors.passwordConfirm} />
       </div>
 
       <div>

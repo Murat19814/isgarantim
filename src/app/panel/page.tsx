@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   HandHelping, Wrench, Briefcase, Building2, ShieldAlert,
-  Mail, ArrowRight, ShieldCheck, Bell, Gift, Heart, TrendingUp,
+  Mail, ArrowRight, ShieldCheck, Bell, Gift, Heart, TrendingUp, KeyRound,
 } from "lucide-react";
 import { auth } from "@/lib/auth/session";
 import { ROLE_LABELS, type UserRole } from "@/lib/constants";
@@ -129,6 +129,13 @@ export default async function PanelPage() {
           className="inline-flex items-center gap-2 text-sm font-medium text-navy-500 hover:text-navy-800"
         >
           <Bell className="h-4 w-4" /> Bildirim tercihleri
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+        <Link
+          href="/panel/ayarlar/sifre"
+          className="inline-flex items-center gap-2 text-sm font-medium text-navy-500 hover:text-navy-800"
+        >
+          <KeyRound className="h-4 w-4" /> Şifre değiştir
           <ArrowRight className="h-4 w-4" />
         </Link>
         <Link
