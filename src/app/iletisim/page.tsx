@@ -12,28 +12,13 @@ export default function Page() {
       title="İletişim"
       subtitle={`${APP_NAME} ekibine ulaşın — sorularınızı ve önerilerinizi bekliyoruz.`}
     >
-      <Section title="İletişim Bilgileri">
+      <Section title="İletişim">
+        <p>
+          Şu an için bize yalnızca e-posta ile ulaşabilirsiniz. Müşteri hizmetleri
+          telefon hattımız kısa süre içinde bu sayfada yayınlanacaktır.
+        </p>
         <Bullets
           items={[
-            <>Yetkili: {LEGAL.contactPerson}</>,
-            <>Adres: {LEGAL.address}</>,
-            <>
-              Telefon:{" "}
-              <a href={`tel:${LEGAL.phoneLink}`} className="text-emerald-600 underline">
-                {LEGAL.phone}
-              </a>
-            </>,
-            <>
-              WhatsApp:{" "}
-              <a
-                href={`https://wa.me/${LEGAL.whatsappNumber}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-emerald-600 underline"
-              >
-                {LEGAL.whatsapp}
-              </a>
-            </>,
             <>
               Destek e-posta:{" "}
               <a

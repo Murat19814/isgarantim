@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Phone, MessageCircle, MapPin } from "lucide-react";
+import { ShieldCheck, Mail } from "lucide-react";
 import { APP_DOMAIN, LEGAL } from "@/lib/constants";
 
 const COLS = [
@@ -59,22 +59,12 @@ export function Footer() {
               komisyon olmadan müşterilerle hizmet verenleri buluşturuyoruz.
             </p>
             <ul className="mt-4 space-y-1.5 text-sm text-navy-500">
-              <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-emerald-600" /> {LEGAL.address}
-              </li>
-              <li>
-                <a href={`tel:${LEGAL.phoneLink}`} className="flex items-center gap-2 hover:text-emerald-600">
-                  <Phone className="h-4 w-4 text-emerald-600" /> {LEGAL.phone}
-                </a>
-              </li>
               <li>
                 <a
-                  href={`https://wa.me/${LEGAL.whatsappNumber}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`mailto:${LEGAL.supportEmail}`}
                   className="flex items-center gap-2 hover:text-emerald-600"
                 >
-                  <MessageCircle className="h-4 w-4 text-emerald-600" /> WhatsApp: {LEGAL.whatsapp}
+                  <Mail className="h-4 w-4 text-emerald-600" /> {LEGAL.supportEmail}
                 </a>
               </li>
             </ul>

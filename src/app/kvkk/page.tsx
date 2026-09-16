@@ -24,6 +24,7 @@ export default function Page() {
           items={[
             <>Ünvan: {LEGAL.companyName}</>,
             <>Adres: {LEGAL.address}</>,
+            <>Telefon: {LEGAL.phone}</>,
             <>MERSİS No: {LEGAL.mersis}</>,
             <>KEP: {LEGAL.kepAddress}</>,
             <>E-posta: {LEGAL.kvkkEmail}</>,
