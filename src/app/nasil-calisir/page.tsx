@@ -86,7 +86,10 @@ export default function Page() {
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link href="/kayit" className="btn-gold">Üye Ol</Link>
-              <Link href="/giris" className="btn-outline border-white/30 text-white hover:bg-white/10">
+              <Link
+                href="/giris"
+                className="btn border border-white/40 bg-transparent text-white hover:bg-white/10 focus-visible:ring-white/50"
+              >
                 Giriş Yap
               </Link>
             </div>
