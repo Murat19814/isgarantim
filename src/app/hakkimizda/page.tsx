@@ -3,7 +3,7 @@ import { LEGAL, APP_NAME, APP_SLOGAN } from "@/lib/constants";
 
 export const metadata = {
   title: "Hakkımızda",
-  description: "İşKalkan nedir, nasıl çalışır ve neyi amaçlar?",
+  description: "İşGarantim nedir, nasıl çalışır ve neyi amaçlar?",
 };
 
 export default function Page() {
@@ -18,7 +18,7 @@ export default function Page() {
         </p>
       </Section>
 
-      <Section title="Neden İşKalkan?">
+      <Section title="Neden İşGarantim?">
         <Bullets
           items={[
             "Emanet ödeme: Ödemeniz, iş tamamlanıp onaylanana kadar güvende tutulur.",

@@ -3,7 +3,7 @@ import { LEGAL, APP_NAME } from "@/lib/constants";
 
 export const metadata = {
   title: "Çerez Politikası",
-  description: "İşKalkan çerez (cookie) politikası ve çerez tercihleri.",
+  description: "İşGarantim çerez (cookie) politikası ve çerez tercihleri.",
 };
 
 export default function Page() {

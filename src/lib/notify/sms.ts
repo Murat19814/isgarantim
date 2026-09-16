@@ -12,5 +12,5 @@ export async function sendSms(to: string, message: string): Promise<void> {
 }
 
 export async function sendVerificationSms(to: string, code: string) {
-  await sendSms(to, `İşKalkan doğrulama kodun: ${code} (10 dk geçerli)`);
+  await sendSms(to, `İşGarantim doğrulama kodun: ${code} (10 dk geçerli)`);
 }

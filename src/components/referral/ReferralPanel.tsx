@@ -37,8 +37,8 @@ export function ReferralPanel({
   async function share() {
     if (navigator.share) {
       await navigator.share({
-        title: "İşKalkan'a katıl",
-        text: "İşKalkan'da hizmet al, hizmet ver — ilk yıl her şey ücretsiz!",
+        title: "İşGarantim'a katıl",
+        text: "İşGarantim'da hizmet al, hizmet ver — ilk yıl her şey ücretsiz!",
         url: link,
       }).catch(() => {});
     } else {

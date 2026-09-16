@@ -80,7 +80,7 @@ async function dispatchExternalMatches(userIds: string[], title: string) {
       await sendEmail(u.email, "Sana uygun yeni bir talep var", `"${title}" talebine teklif verebilirsin.`);
     }
     if (pref.smsEnabled && u.phone) {
-      await sendSms(u.phone, `İşKalkan: sana uygun yeni talep — "${title}".`);
+      await sendSms(u.phone, `İşGarantim: sana uygun yeni talep — "${title}".`);
     }
   }
 }

@@ -22,7 +22,7 @@ export function AuthShell({
             <ShieldCheck className="h-6 w-6" />
           </span>
           <span className="font-display text-xl font-extrabold">
-            İş<span className="text-emerald-400">Kalkan</span>
+            İş<span className="text-emerald-400">Garantim</span>
           </span>
         </Link>
         <div>
@@ -30,12 +30,12 @@ export function AuthShell({
             <span className="text-gradient-gold">{APP_SLOGAN}</span>
           </h2>
           <p className="mt-4 max-w-sm text-navy-100">
-            Doğrulanmış ustalar, emanet ödeme ve binlerce iş ilanı — hepsi tek,
-            güvenli platformda.
+            Teklif ücreti, kontör ve komisyon olmadan müşterilerle hizmet
+            verenleri buluşturuyoruz.
           </p>
         </div>
         <p className="text-xs text-navy-300">
-          © {new Date().getFullYear()} İşKalkan · isgarantim.com
+          © {new Date().getFullYear()} İşGarantim · isgarantim.com
         </p>
       </div>
 
@@ -50,7 +50,7 @@ export function AuthShell({
               <ShieldCheck className="h-5 w-5" />
             </span>
             <span className="font-display text-lg font-extrabold text-navy-900">
-              İş<span className="text-emerald-600">Kalkan</span>
+              İş<span className="text-emerald-600">Garantim</span>
             </span>
           </Link>
 

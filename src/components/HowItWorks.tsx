@@ -1,10 +1,10 @@
-import { FileText, Users, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { FileText, Users, UserCheck, CalendarCheck } from "lucide-react";
 
 const STEPS = [
   {
     icon: FileText,
     title: "1. Talebini oluştur",
-    desc: "Kategori, konum, açıklama, bütçe ve fotoğrafla ihtiyacını dakikalar içinde anlat.",
+    desc: "Kategori, konum, açıklama ve fotoğrafla ihtiyacını dakikalar içinde anlat.",
   },
   {
     icon: Users,
@@ -12,14 +12,14 @@ const STEPS = [
     desc: "Fiyat, puan, yorum, tamamlanan iş ve doğrulanmış profile göre ustaları kıyasla.",
   },
   {
-    icon: ShieldCheck,
-    title: "3. Güvenle öde",
-    desc: "Ödemen lisanslı ödeme kuruluşunun emanet sisteminde bekler; usta işi bitirmeden aktarılmaz.",
+    icon: UserCheck,
+    title: "3. Hizmet vereni seç",
+    desc: "Sana en uygun kişiyi seç, platform üzerinden mesajlaşarak detayları netleştir.",
   },
   {
-    icon: CheckCircle2,
-    title: "4. Onayla & tamamla",
-    desc: "İş bittiğinde onayla, ödeme ustaya geçsin. Sorun olursa itiraz aç, ödeme durdurulsun.",
+    icon: CalendarCheck,
+    title: "4. Randevunu oluştur ve değerlendir",
+    desc: "Randevu tarihini belirle, iş tamamlanınca deneyimini puanla ve yorum bırak.",
   },
 ];
 
@@ -30,7 +30,7 @@ export function HowItWorks() {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="section-title">Nasıl çalışır?</h2>
           <p className="section-subtitle mx-auto">
-            Dört basit adımda, işin de ödemen de güvende.
+            Dört basit adımda doğru kişiyi güvenle bul.
           </p>
         </div>
 

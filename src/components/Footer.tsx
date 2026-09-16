@@ -9,7 +9,6 @@ const COLS = [
       { href: "/hizmet-al", label: "Hizmet Al" },
       { href: "/hizmet-ver", label: "Hizmet Ver" },
       { href: "/nasil-calisir", label: "Nasıl Çalışır?" },
-      { href: "/kontor", label: "Kontör Satın Al" },
     ],
   },
   {
@@ -25,7 +24,7 @@ const COLS = [
     title: "Kurumsal",
     links: [
       { href: "/hakkimizda", label: "Hakkımızda" },
-      { href: "/guvenlik", label: "Güvenlik & Emanet" },
+      { href: "/guvenlik", label: "Güvenlik" },
       { href: "/iletisim", label: "İletişim" },
       { href: "/yardim", label: "Yardım Merkezi" },
     ],
@@ -52,12 +51,12 @@ export function Footer() {
                 <ShieldCheck className="h-5 w-5" />
               </span>
               <span className="font-display text-lg font-extrabold text-navy-900">
-                İş<span className="text-emerald-600">Kalkan</span>
+                İş<span className="text-emerald-600">Garantim</span>
               </span>
             </Link>
             <p className="mt-4 max-w-xs text-sm text-navy-500">
-              İşin de ödemen de güvende. Doğrulanmış ustalar, emanet ödeme ve
-              binlerce iş ilanı tek platformda.
+              İşini güvenle bul, ücretsiz teklif al. Teklif ücreti, kontör ve
+              komisyon olmadan müşterilerle hizmet verenleri buluşturuyoruz.
             </p>
             <ul className="mt-4 space-y-1.5 text-sm text-navy-500">
               <li className="flex items-center gap-2">
@@ -102,11 +101,11 @@ export function Footer() {
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-navy-100 pt-6 sm:flex-row">
           <p className="text-xs text-navy-400">
-            © {new Date().getFullYear()} İşKalkan · {APP_DOMAIN} · Tüm hakları
+            © {new Date().getFullYear()} İşGarantim · {APP_DOMAIN} · Tüm hakları
             saklıdır.
           </p>
           <p className="text-xs text-navy-400">
-            Ödemeler lisanslı ödeme kuruluşu güvencesiyle işlenir.
+            İlk yıl teklif ücreti, kontör ve komisyon yok.
           </p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { LEGAL, APP_NAME, APP_DOMAIN } from "@/lib/constants";
 
 export const metadata = {
   title: "Kullanım Koşulları",
-  description: "İşKalkan platformu kullanım koşulları ve üyelik sözleşmesi.",
+  description: "İşGarantim platformu kullanım koşulları ve üyelik sözleşmesi.",
 };
 
 export default function Page() {
@@ -27,7 +27,7 @@ export default function Page() {
       <Section title="2. Platformun Rolü">
         <Bullets
           items={[
-            "İşKalkan, kullanıcıları buluşturan bir aracı platformdur; hizmetin bizzat sağlayıcısı veya işçi/işveren değildir.",
+            "İşGarantim, kullanıcıları buluşturan bir aracı platformdur; hizmetin bizzat sağlayıcısı veya işçi/işveren değildir.",
             "Hizmetlerin ifasına ilişkin sorumluluk, ilgili hizmet veren ile hizmet alan arasındadır.",
             "Platform, taraflar arasındaki ödemeyi emanet (escrow) sistemiyle güvence altına alır; iş onaylanana kadar ödeme serbest bırakılmaz.",
           ]}

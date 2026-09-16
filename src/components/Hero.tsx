@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, ShieldCheck, Star, Lock } from "lucide-react";
-import { CITIES, APP_SLOGAN } from "@/lib/constants";
+import { Search, MapPin, ShieldCheck, Star, BadgeCheck } from "lucide-react";
+import { CITIES, APP_SLOGAN, APP_SUBSLOGAN } from "@/lib/constants";
 
 export function Hero() {
   const [query, setQuery] = useState("");
@@ -13,16 +13,14 @@ export function Hero() {
       <div className="container-page relative py-16 sm:py-20 lg:py-28">
         <div className="mx-auto max-w-3xl text-center">
           <span className="badge-gold mx-auto mb-5 inline-flex bg-gold-400/15 text-gold-300 ring-1 ring-gold-400/30">
-            <ShieldCheck className="h-3.5 w-3.5" /> Güvenli ödeme & doğrulanmış ustalar
+            <ShieldCheck className="h-3.5 w-3.5" /> Doğrulanmış ustalar · 1. yıl ücretsiz
           </span>
 
           <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             <span className="text-gradient-gold">{APP_SLOGAN}</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-navy-100 sm:text-lg">
-            Doğrulanmış ustalardan teklif al, en uygununu seç. Ödemen iş
-            tamamlanana kadar İşKalkan güvencesinde bekler. İş mi arıyorsun?
-            Binlerce güncel ilan seni bekliyor.
+            {APP_SUBSLOGAN}
           </p>
 
           {/* Arama kutusu */}
@@ -64,7 +62,7 @@ export function Hero() {
           {/* Güven göstergeleri */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-navy-100">
             <span className="inline-flex items-center gap-2">
-              <Lock className="h-4 w-4 text-emerald-400" /> Emanet (escrow) ödeme
+              <BadgeCheck className="h-4 w-4 text-emerald-400" /> Ücretsiz teklif
             </span>
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-400" /> Kimlik doğrulama

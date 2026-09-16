@@ -4,9 +4,27 @@
  * burada başlangıç/tohum verisi olarak tutuluyor.
  */
 
-export const APP_NAME = "İşKalkan";
+export const APP_NAME = "İşGarantim";
 export const APP_DOMAIN = "isgarantim.com";
-export const APP_SLOGAN = "İşin de ödemen de güvende";
+/** Ana sayfa hero sloganı. */
+export const APP_SLOGAN =
+  "İhtiyacını paylaş, teklifleri karşılaştır, doğru kişiyi güvenle bul.";
+/** Kısa marka sloganı (başlık/meta). */
+export const APP_TAGLINE = "İşini güvenle bul, ücretsiz teklif al.";
+/** Hero alt metni. */
+export const APP_SUBSLOGAN =
+  "Teklif ücreti, kontör ve komisyon olmadan müşterilerle hizmet verenleri buluşturuyoruz.";
+
+/**
+ * Lansman öncesi ana sayfa göstergeleri.
+ * Gerçek işlem verisi biriktikçe canlı rakamlarla değiştirilecek.
+ */
+export const HOME_STATS = [
+  { value: "0 ₺", label: "Teklif ücreti" },
+  { value: "0 ₺", label: "Komisyon" },
+  { value: "Yok", label: "Kontör" },
+  { value: "1 yıl", label: "Ücretsiz dönem" },
+] as const;
 
 /**
  * Yasal/kurumsal bilgiler — tek kaynak.
@@ -15,7 +33,7 @@ export const APP_SLOGAN = "İşin de ödemen de güvende";
  */
 export const LEGAL = {
   companyName: "Murat Atalay",
-  tradeName: "İşKalkan",
+  tradeName: "İşGarantim",
   contactPerson: "Murat Atalay",
   address: "Vema Residans",
   mersis: "[MERSİS No]",

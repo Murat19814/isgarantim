@@ -20,11 +20,11 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "İşKalkan — İşin de ödemen de güvende",
-    template: "%s | İşKalkan",
+    default: "İşGarantim — İşini güvenle bul, ücretsiz teklif al",
+    template: "%s | İşGarantim",
   },
   description:
-    "İşKalkan (isgarantim.com): Doğrulanmış ustalardan güvenle hizmet al, hizmet ver, iş ara veya iş ilanı yayınla. Ödemen iş tamamlanana kadar platformda güvende.",
+    "İşGarantim (isgarantim.com): İhtiyacını paylaş, teklifleri karşılaştır, doğru kişiyi güvenle bul. Teklif ücreti, kontör ve komisyon olmadan müşterilerle hizmet verenleri buluşturuyoruz.",
   keywords: [
     "hizmet",
     "usta",
@@ -32,16 +32,16 @@ export const metadata: Metadata = {
     "iş ara",
     "tadilat",
     "temizlik",
-    "güvenli ödeme",
+    "ücretsiz teklif",
     "isgarantim",
   ],
   metadataBase: new URL("https://isgarantim.com"),
   openGraph: {
-    title: "İşKalkan — İşin de ödemen de güvende",
+    title: "İşGarantim — İşini güvenle bul, ücretsiz teklif al",
     description:
-      "Doğrulanmış ustalardan güvenle hizmet al, iş ara veya iş ilanı yayınla.",
+      "İhtiyacını paylaş, teklifleri karşılaştır, doğru kişiyi güvenle bul. Ücretsiz teklif, kontör ve komisyon yok.",
     url: "https://isgarantim.com",
-    siteName: "İşKalkan",
+    siteName: "İşGarantim",
     locale: "tr_TR",
     type: "website",
   },

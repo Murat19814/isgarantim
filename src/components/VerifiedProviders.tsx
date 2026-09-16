@@ -7,9 +7,10 @@ export function VerifiedProviders() {
     <section className="container-page py-16 sm:py-20">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h2 className="section-title">Doğrulanmış ustalar</h2>
+          <h2 className="section-title">Hizmet verenler nasıl görünür?</h2>
           <p className="section-subtitle">
-            Kimliği ve becerisi doğrulanmış, yüksek puanlı hizmet verenler.
+            Aşağıdakiler örnek (demo) profillerdir. Gerçek hizmet verenler
+            katıldıkça bu alan canlı profillerle dolacak.
           </p>
         </div>
         <Link href="/hizmet-al" className="btn-outline shrink-0">
@@ -19,7 +20,10 @@ export function VerifiedProviders() {
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {MOCK_PROVIDERS.map((p) => (
-          <div key={p.id} className="card p-5">
+          <div key={p.id} className="card relative p-5">
+            <span className="absolute right-3 top-3 rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-navy-500">
+              Demo profil
+            </span>
             <div className="flex items-center gap-3">
               <span className="grid h-12 w-12 place-items-center rounded-full bg-navy-800 font-display text-sm font-bold text-gold-400">
                 {p.avatar}

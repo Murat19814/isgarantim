@@ -12,7 +12,7 @@ const CARDS = [
   {
     href: "/hizmet-ver",
     title: "Hizmet Ver",
-    desc: "Kontör yükle, işlere teklif ver, kazandıkça büyü.",
+    desc: "Ücretsiz profil oluştur, uygun talepleri gör ve ücretsiz teklif ver.",
     icon: Wrench,
     accent: "navy",
   },

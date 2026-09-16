@@ -4,7 +4,7 @@ import { LEGAL } from "@/lib/constants";
 export const metadata = {
   title: "Güvenlik & Emanet",
   description:
-    "İşKalkan emanet ödeme sistemi ve hesap güvenliği hakkında bilmeniz gerekenler.",
+    "İşGarantim emanet ödeme sistemi ve hesap güvenliği hakkında bilmeniz gerekenler.",
 };
 
 export default function Page() {

@@ -8,9 +8,10 @@ export function LatestJobs() {
       <div className="container-page">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <h2 className="section-title">Güncel iş ilanları</h2>
+            <h2 className="section-title">İş ilanları nasıl görünür?</h2>
             <p className="section-subtitle">
-              Kurumsal firmaların en yeni ilanları — hemen başvur.
+              Aşağıdakiler örnek ilanlardır. Firmalar ilan yayınladıkça bu alan
+              gerçek ilanlarla dolacak.
             </p>
           </div>
           <Link href="/is-ara" className="btn-outline shrink-0">
@@ -23,8 +24,11 @@ export function LatestJobs() {
             <Link
               key={j.id}
               href={`/is/${j.id}`}
-              className="group card flex items-center gap-4 p-5 transition-all hover:shadow-card"
+              className="group card relative flex items-center gap-4 p-5 transition-all hover:shadow-card"
             >
+              <span className="absolute right-3 top-3 rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-navy-500">
+                Örnek ilan
+              </span>
               <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-navy-800 font-display text-sm font-bold text-white">
                 {j.logo}
               </span>

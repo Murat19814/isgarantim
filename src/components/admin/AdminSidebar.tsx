@@ -36,7 +36,7 @@ export function AdminSidebar() {
           <ShieldCheck className="h-5 w-5" />
         </span>
         <span className="font-display text-lg font-extrabold text-white">
-          İşKalkan <span className="text-gold-400">Admin</span>
+          İşGarantim <span className="text-gold-400">Admin</span>
         </span>
       </Link>
 

@@ -10,7 +10,7 @@ export function CtaMobile() {
               <Smartphone className="h-3.5 w-3.5" /> Mobil uygulama
             </span>
             <h2 className="mt-4 font-display text-3xl font-extrabold sm:text-4xl">
-              İşKalkan cebinde
+              İşGarantim cebinde
             </h2>
             <p className="mt-3 max-w-md text-navy-100">
               Hizmet talebi oluştur, teklif ver, mesajlaş, öde ve iş ilanlarına

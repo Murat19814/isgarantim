@@ -9,7 +9,7 @@
  *   SMTP_PORT="465"            # 465 = SSL, 587 = STARTTLS
  *   SMTP_USER="hesap@gmail.com"
  *   SMTP_PASS="uygulama-sifresi (16 haneli app password)"
- *   MAIL_FROM="İşKalkan <no-reply@isgarantim.com>"
+ *   MAIL_FROM="İşGarantim <no-reply@isgarantim.com>"
  */
 import nodemailer, { type Transporter } from "nodemailer";
 
@@ -67,21 +67,21 @@ function verificationHtml(code: string): string {
   return `
   <div style="max-width:480px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:24px;border-radius:16px;border:1px solid #e2e8f0;">
     <div style="text-align:center;padding:8px 0 16px;">
-      <span style="font-size:22px;font-weight:800;color:#0f172a;">İş<span style="color:#059669;">Kalkan</span></span>
+      <span style="font-size:22px;font-weight:800;color:#0f172a;">İş<span style="color:#059669;">Garantim</span></span>
     </div>
     <div style="background:#ffffff;border-radius:12px;padding:24px;text-align:center;">
       <p style="color:#334155;font-size:15px;margin:0 0 12px;">E-posta doğrulama kodun:</p>
       <div style="font-size:32px;font-weight:800;letter-spacing:8px;color:#0f172a;margin:8px 0 16px;">${code}</div>
       <p style="color:#64748b;font-size:13px;margin:0;">Bu kod 10 dakika geçerlidir. Bu talebi sen yapmadıysan bu e-postayı yok sayabilirsin.</p>
     </div>
-    <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;">© ${new Date().getFullYear()} İşKalkan · isgarantim.com</p>
+    <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;">© ${new Date().getFullYear()} İşGarantim · isgarantim.com</p>
   </div>`;
 }
 
 export async function sendVerificationEmail(to: string, code: string) {
   await sendEmail({
     to,
-    subject: `İşKalkan — E-posta doğrulama kodun: ${code}`,
+    subject: `İşGarantim — E-posta doğrulama kodun: ${code}`,
     text: `Doğrulama kodun: ${code}\nBu kod 10 dakika geçerlidir.`,
     html: verificationHtml(code),
   });

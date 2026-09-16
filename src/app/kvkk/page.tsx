@@ -4,7 +4,7 @@ import { LEGAL, APP_NAME } from "@/lib/constants";
 export const metadata = {
   title: "KVKK Aydınlatma Metni ve Gizlilik Politikası",
   description:
-    "İşKalkan kişisel verilerin korunması (KVKK) aydınlatma metni ve gizlilik politikası.",
+    "İşGarantim kişisel verilerin korunması (KVKK) aydınlatma metni ve gizlilik politikası.",
 };
 
 export default function Page() {

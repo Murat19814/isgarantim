@@ -21,7 +21,7 @@ const ROLE_CARDS: Record<
   provider: {
     href: "/panel/hizmet-ver",
     icon: Wrench,
-    desc: "Kontör yükle, açık taleplere teklif ver, kazançlarını takip et.",
+    desc: "Ücretsiz profil oluştur, uygun talepleri gör ve ücretsiz teklif ver.",
   },
   jobseeker: {
     href: "/panel/is-ara",

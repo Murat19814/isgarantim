@@ -4,7 +4,7 @@ import { LEGAL, APP_NAME } from "@/lib/constants";
 export const metadata = {
   title: "Mesafeli Satış Sözleşmesi",
   description:
-    "İşKalkan mesafeli satış sözleşmesi — kontör ve dijital hizmet satın alımları.",
+    "İşGarantim mesafeli satış sözleşmesi — kontör ve dijital hizmet satın alımları.",
 };
 
 export default function Page() {

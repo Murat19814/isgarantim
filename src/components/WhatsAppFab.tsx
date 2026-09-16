@@ -4,7 +4,7 @@ import { LEGAL } from "@/lib/constants";
 /** Sabit (yüzen) WhatsApp butonu — her sayfada sağ altta. */
 export function WhatsAppFab() {
   const text = encodeURIComponent(
-    "Merhaba, İşKalkan (isgarantim.com) hakkında bilgi almak istiyorum.",
+    "Merhaba, İşGarantim (isgarantim.com) hakkında bilgi almak istiyorum.",
   );
   return (
     <a

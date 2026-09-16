@@ -22,7 +22,7 @@ export default async function Page() {
             Arkadaşını davet et
           </h1>
           <p className="mt-1 text-sm text-navy-500">
-            İşKalkan hep ücretsiz. Davet ettiğin arkadaşların katılıp hesabını doğruladıkça
+            İşGarantim hep ücretsiz. Davet ettiğin arkadaşların katılıp hesabını doğruladıkça
             rozetler ve <b>Kurucu Üye</b> unvanı kazanırsın. (Para veya ödeme yok — sadece topluluk ödülleri.)
           </p>
 

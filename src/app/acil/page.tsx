@@ -63,7 +63,7 @@ export default async function Page() {
 
           <p className="mt-6 rounded-xl bg-navy-50 p-4 text-center text-sm text-navy-500">
             Hayati tehlike, yangın veya sağlık acili durumlarında lütfen önce resmi acil hatları
-            (112, 110, 155) arayın. İşKalkan resmi acil servislerin yerine geçmez.
+            (112, 110, 155) arayın. İşGarantim resmi acil servislerin yerine geçmez.
           </p>
         </div>
       </main>

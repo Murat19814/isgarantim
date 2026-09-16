@@ -3,12 +3,12 @@ import { LEGAL } from "@/lib/constants";
 
 export const metadata = {
   title: "Yardım Merkezi",
-  description: "İşKalkan sık sorulan sorular ve yardım rehberi.",
+  description: "İşGarantim sık sorulan sorular ve yardım rehberi.",
 };
 
 const FAQ: { q: string; a: string }[] = [
   {
-    q: "İşKalkan nasıl çalışır?",
+    q: "İşGarantim nasıl çalışır?",
     a: "Hizmet almak için talep oluşturursunuz, doğrulanmış hizmet verenler teklif verir, en uygununu seçip ödemeyi emanete alırsınız. İş tamamlanıp onayladığınızda ödeme hizmet verene aktarılır.",
   },
   {

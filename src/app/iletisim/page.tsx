@@ -3,7 +3,7 @@ import { LEGAL, APP_NAME } from "@/lib/constants";
 
 export const metadata = {
   title: "İletişim",
-  description: "İşKalkan iletişim bilgileri.",
+  description: "İşGarantim iletişim bilgileri.",
 };
 
 export default function Page() {

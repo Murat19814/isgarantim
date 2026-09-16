@@ -26,7 +26,7 @@ export function Navbar() {
             <ShieldCheck className="h-5 w-5" />
           </span>
           <span className="font-display text-lg font-extrabold tracking-tight text-navy-900">
-            İş<span className="text-emerald-600">Kalkan</span>
+            İş<span className="text-emerald-600">Garantim</span>
           </span>
         </Link>
 

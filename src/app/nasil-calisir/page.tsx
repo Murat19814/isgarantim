@@ -44,7 +44,7 @@ export default function Page() {
               Nasıl Çalışır?
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-navy-500">
-              İşKalkan; hizmet alan, hizmet veren, iş arayan ve işveren için tek güvenli platform.
+              İşGarantim; hizmet alan, hizmet veren, iş arayan ve işveren için tek güvenli platform.
               Emanet ödeme ve doğrulanmış profillerle işini de ödemeni de güvenceye alır.
             </p>
           </div>
